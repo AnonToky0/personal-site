@@ -1,0 +1,105 @@
+<div class="fox-pet" role="img" aria-label="一只暖橙色的手绘小狐狸，竖着大耳朵，白色胸毛蓬松，抱着大尾巴安静坐着，偶尔眨眼和轻轻歪头">
+	<svg viewBox="0 0 240 280" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+		<defs>
+			<linearGradient id="fox-fur" x1="0" y1="0" x2=".85" y2="1">
+				<stop stop-color="#ffc16e" /><stop offset=".48" stop-color="#f69a48" /><stop offset="1" stop-color="#df7136" />
+			</linearGradient>
+			<linearGradient id="fox-cream" x1="0" y1="0" x2="1" y2="1">
+				<stop stop-color="#fffdf3" /><stop offset=".65" stop-color="#fff0d7" /><stop offset="1" stop-color="#f2d3a8" />
+			</linearGradient>
+			<linearGradient id="fox-tail" x1=".2" y1="0" x2=".65" y2="1">
+				<stop stop-color="#ffbf66" /><stop offset=".55" stop-color="#f69c49" /><stop offset="1" stop-color="#e58239" />
+			</linearGradient>
+			<!-- Slightly uneven edges keep the ink soft at the pet's small display size. -->
+			<filter id="fox-paper-edge" x="-5%" y="-5%" width="110%" height="110%">
+				<feTurbulence type="fractalNoise" baseFrequency=".065" numOctaves="3" seed="8" result="grain" />
+				<feDisplacementMap in="SourceGraphic" in2="grain" scale=".85" xChannelSelector="R" yChannelSelector="G" />
+			</filter>
+		</defs>
+		<ellipse cx="127" cy="258" rx="83" ry="5" fill="#78513a" opacity=".08" />
+		<g class="fox" stroke="#644736" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" filter="url(#fox-paper-edge)">
+			<g class="body">
+				<path d="M103 116c-13 15-20 40-16 64l-5 10 7-3c-3 18-1 36 11 48 19 17 74 16 91-4 17-22 7-55-8-77l-13-18 2-8-10 2-7-15Z" fill="url(#fox-fur)" />
+				<path d="M165 145c22 21 33 50 23 72-6 15-20 19-33 15 14-15 18-27 13-46-4-17-12-29-3-41Z" fill="#dc783b" opacity=".25" stroke="none" />
+				<path d="m103 118-13 15 5 1-10 17 7-3-4 16 6-3 1 23 7-5 8 25 7-8 8 15 7-18 7 3 1-20 7 3-3-22 8 2-8-16 5-1-12-18Z" fill="url(#fox-cream)" stroke="none" />
+				<path d="m97 146-3 12m7 10 5 15m23-34 4 13m-16 12 4 20" fill="none" stroke="#d4b590" stroke-width="1.2" opacity=".7" />
+				<path d="M105 182c-2 16-1 32 0 46-9 2-13 7-10 11 4 4 17 3 24 1 4-14 5-29 4-42" fill="#ed9a52" />
+				<path d="m104 220 16 2-1 18c-8 3-21 3-24-1-3-4 1-9 10-11Z" fill="#655044" stroke="none" />
+				<path d="M151 184c-7 12-10 28-10 44-9 0-13 6-10 10 4 4 14 4 22 1l6-30" fill="#ef9c51" />
+				<path d="m141 220 15 2-3 17c-8 3-18 3-22-1-3-4 1-10 10-10Z" fill="#655044" stroke="none" />
+				<path d="m99 235 1 4m7-5 1 5m28-5 1 5m7-5 1 5" stroke="#b49675" stroke-width="1" />
+				<path d="M169 180c-9 4-14 14-15 25m23-8-3 10m-15-53 5 8" fill="none" stroke="#b66b3c" stroke-width="1.4" />
+				<path d="m179 174 6 11m-28-43 9 12m-65 45 1 11" fill="none" stroke="#ffd18b" stroke-width="2.6" />
+			</g>
+			<g class="tail">
+				<path d="M181 208c17-3 26-14 29-26 7 10 10 23 6 34l5-3c0 14-8 26-20 33l6-1c-14 12-34 17-55 18l-20 2 5-4c-21 5-45 1-61-5l-14-1 5-4c-18-3-32-10-44-23 13 1 17-7 27-14l-2-5 12 1c15-10 27-12 40-12l-3-5c24 0 39 13 58 15 9 2 17 2 26 0Z" fill="url(#fox-tail)" />
+				<path d="m23 228 14-1 12-12-1-6 12 1c15-10 27-12 40-12l-3-5 22 5-10 8 12 1-15 10 13 1-14 10 11 3-15 8 7 4-15 7 10 6c-10-1-19-3-27-6l-14-1 5-4c-18-3-32-10-44-23Z" fill="url(#fox-cream)" stroke="none" />
+				<path d="M125 218c30 13 63 10 77-5m-78 36c27 3 53-4 69-13" fill="none" stroke="#cd783b" stroke-width="1.3" />
+				<path d="m137 218 19 3m14-2 13-2m-38 24 18-2m26-14 8-5" fill="none" stroke="#ffd58f" stroke-width="2.8" />
+				<path d="m43 229 14-7m-1 18 15 5m-2-28 11-4m-1 36 11 2" fill="none" stroke="#fffdf6" stroke-width="3.2" />
+				<path d="m32 234 9 6m14 6 9 2m39 12 14 1m52-1 12-3m23-14 8-7" fill="none" stroke="#4f3c31" stroke-width="2.2" />
+			</g>
+			<g class="head">
+				<g class="ear ear-far">
+					<path d="M131 64c10-19 29-37 51-43 2 23-5 45-21 61Z" fill="#e99348" />
+					<path d="M143 62c9-14 21-24 33-31-1 14-6 29-15 39l-2-6-7 5 1-8Z" fill="url(#fox-cream)" stroke="none" />
+					<path d="M145 47c11-12 23-19 33-22m3 9-2 10" fill="none" stroke="#4f3b31" stroke-width="3.6" />
+				</g>
+				<g class="ear ear-near">
+					<path d="M69 77c-9-20-9-45 1-65 17 10 32 30 36 51Z" fill="url(#fox-fur)" />
+					<path d="M74 62c-5-11-6-25-2-38 10 10 17 21 20 35l-8-3 1 9-6-6Z" fill="url(#fox-cream)" stroke="none" />
+					<path d="M65 50c-1-13 1-26 5-35m6 2 8 9" fill="none" stroke="#4f3b31" stroke-width="3.5" />
+				</g>
+				<path d="m94 59 7-9 3 7 10-8 1 8c15-1 27 4 37 12l10 1-4 6 14 10-8 1 13 13-10 1 8 11-13-1c-9 17-28 26-48 28-16-3-29-8-41-19l-13 1 5-8-12-1 8-8-10-3 14-10-5-4 12-4c4-9 12-15 22-19Z" fill="url(#fox-fur)" />
+				<path d="M60 101c13-3 23 0 32 9l17 14c7-14 19-25 33-28l-3 7 14-6-4 8 15-4-5 8 10-1c-9 16-31 26-55 31-18-4-33-11-41-19l-13 1 5-8-12-1 8-8Z" fill="url(#fox-cream)" stroke="none" />
+				<path d="m85 77 6-8m18-4 10-1m17 13 8 5" fill="none" stroke="#ffd28b" stroke-width="2.7" />
+				<path d="m59 100 9-2m-7 15 9-1m91-25 7 5m-10 25-7 6" fill="none" stroke="#74503a" stroke-width="1.8" />
+				<g class="eyes" fill="#443a31" stroke="none">
+					<ellipse cx="83" cy="99" rx="3.1" ry="4.8" transform="rotate(-18 83 99)" />
+					<ellipse cx="133" cy="96" rx="3.3" ry="4.8" transform="rotate(24 133 96)" />
+					<circle cx="82.4" cy="97.5" r=".9" fill="#fff8e8" /><circle cx="132.5" cy="94.5" r=".9" fill="#fff8e8" />
+				</g>
+				<path d="M101 121c3-3 10-4 14-2 3 3-2 8-5 9-4 0-9-4-9-7Z" fill="#443a31" stroke="none" />
+				<path d="m105 121 4-1" stroke="#aaa08c" stroke-width="1.2" />
+				<path d="m109 128 1 4m-9 0q5 5 9 0 5 3 9-2" fill="none" stroke="#795b45" stroke-width="1.2" />
+				<path d="m77 115-7-2m12 7-6 1m64-11 7-3m-10 8 8-1" fill="none" stroke="#c4a17d" stroke-width="1.1" />
+			</g>
+		</g>
+	</svg>
+</div>
+
+<style>
+	.fox-pet {
+		position: fixed;
+		right: max(16px, env(safe-area-inset-right));
+		bottom: max(12px, env(safe-area-inset-bottom));
+		width: min(180px, 32vw, 30vh);
+		z-index: 10;
+		pointer-events: none;
+	}
+	.fox-pet svg { display: block; width: 100%; height: auto; overflow: visible; }
+	.tail { transform-origin: 185px 216px; animation: tail-sway 6.8s ease-in-out infinite; }
+	.head { transform-origin: 119px 134px; animation: head-tilt 10s ease-in-out infinite; }
+	.ear-near { transform-origin: 85px 66px; animation: ear-twitch 10s ease-in-out infinite; }
+	.eyes { transform-origin: 108px 98px; animation: blink 6.4s linear infinite; }
+	@keyframes tail-sway {
+		0%, 100% { transform: rotate(-1deg); }
+		50% { transform: rotate(2deg); }
+	}
+	@keyframes head-tilt {
+		0%, 30%, 65%, 100% { transform: rotate(0deg); }
+		42%, 53% { transform: rotate(-5deg); }
+	}
+	@keyframes ear-twitch {
+		0%, 70%, 80%, 100% { transform: rotate(0deg); }
+		73%, 77% { transform: rotate(-5deg); }
+		75% { transform: rotate(2deg); }
+	}
+	@keyframes blink {
+		0%, 43%, 47%, 76%, 80%, 100% { transform: scaleY(1); }
+		45%, 78% { transform: scaleY(.08); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tail, .head, .ear-near, .eyes { animation: none; }
+	}
+</style>

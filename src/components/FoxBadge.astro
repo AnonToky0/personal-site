@@ -1,0 +1,17 @@
+---
+interface Props { decorative?: boolean; }
+const { decorative = false } = Astro.props;
+---
+
+<svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : '圆形狐狸图标'} aria-hidden={decorative ? 'true' : undefined}>
+	<circle cx="28" cy="28" r="26" fill="#f4e9d6" stroke="#aa8460" stroke-width="1" />
+	<path d="m15 29-1-15 11 8 6-1 11-8-3 19-11 12Z" fill="#d77c39" />
+	<path d="m14 14 2 10 5-5Zm28-1-8 7 6 3Z" fill="#41392e" />
+	<path d="m15 29 10 3 3 8 4-8 7-1-11 13Z" fill="#fff7e8" />
+	<path d="m20 28 4 1m9-1 3-1" fill="none" stroke="#41392e" stroke-width="1.6" stroke-linecap="round" />
+	<path d="m25 36 6-1-3 4Z" fill="#41392e" />
+</svg>
+
+<style>
+	svg { display: block; width: 100%; height: 100%; }
+</style>

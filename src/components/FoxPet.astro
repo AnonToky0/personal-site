@@ -1,0 +1,59 @@
+---
+import FoxArtwork from './FoxArtwork.astro';
+import FoxBadge from './FoxBadge.astro';
+import ButterflyArtwork from './ButterflyArtwork.astro';
+interface Props { preview?: boolean; }
+const { preview = false } = Astro.props;
+---
+
+<fox-companion class="fox-pet" id={preview ? 'corner-preview' : undefined} data-preview={String(preview)} data-persist="true" data-state="resting" data-mode="auto" data-butterfly="hidden">
+	<button class="fox-toggle" data-fox-toggle type="button" disabled aria-label="收起狐狸" aria-expanded="true" title="点击收起狐狸">
+		{(['resting', 'sitting', 'sleeping'] as const).map((pose) => (
+			<span class="fox-form" data-pose={pose} aria-hidden="true"><FoxArtwork pose={pose} decorative /></span>
+		))}
+		<span class="fox-badge" aria-hidden="true"><FoxBadge decorative /></span>
+	</button>
+	<div class="butterfly" data-butterfly hidden aria-hidden="true"><ButterflyArtwork decorative /></div>
+</fox-companion>
+
+<script>
+	import '../scripts/fox-companion';
+</script>
+
+<style>
+	.fox-pet {
+		display: block;
+		position: fixed;
+		right: max(16px, env(safe-area-inset-right));
+		bottom: max(12px, env(safe-area-inset-bottom));
+		width: min(var(--fox-size, 180px), 36vw, 30vh);
+		aspect-ratio: 1;
+		z-index: 50;
+		pointer-events: none;
+	}
+	.fox-pet[data-preview="true"] { width: var(--fox-size, 180px); }
+	.fox-pet[data-state="badge"] { width: 48px; }
+	.fox-toggle {
+		position: relative; display: block; width: 100%; height: 100%; padding: 0; margin: 0;
+		border: 0; border-radius: 8px; background: transparent; -webkit-tap-highlight-color: transparent;
+		pointer-events: auto; cursor: pointer; touch-action: manipulation;
+	}
+	.fox-toggle:disabled { cursor: default; }
+	.fox-toggle:focus-visible { outline: 2px solid #a06636; outline-offset: 6px; }
+	.fox-form {
+		position: absolute; inset: 0; display: block; opacity: 0; pointer-events: none;
+		transform: translateY(3px) scale(.985); transform-origin: center bottom;
+		transition: opacity 240ms ease, transform 280ms ease;
+	}
+	.fox-pet[data-state="resting"] [data-pose="resting"],
+	.fox-pet[data-state="sitting"] [data-pose="sitting"],
+	.fox-pet[data-state="sleeping"] [data-pose="sleeping"] { opacity: 1; transform: none; }
+	.fox-badge { position: absolute; right: 0; bottom: 0; width: 48px; height: 48px; opacity: 0; transform: scale(.9); pointer-events: none; transition: opacity 180ms ease, transform 200ms ease; }
+	.fox-pet[data-state="badge"] .fox-badge { opacity: 1; transform: none; }
+	.butterfly { position: fixed; top: 0; left: 0; width: 48px; height: 48px; pointer-events: none; z-index: 51; }
+	.butterfly[hidden] { display: none; }
+	:global(html.fox-cursor-active), :global(html.fox-cursor-active *) { cursor: none !important; }
+	@media (prefers-reduced-motion: reduce) {
+		.fox-form, .fox-badge, .butterfly { transition: none !important; transform: none; }
+	}
+</style>

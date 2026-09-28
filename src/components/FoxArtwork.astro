@@ -1,0 +1,41 @@
+---
+import { Image } from 'astro:assets';
+import sitting from '../assets/fox/fox-a-sitting-v1.png';
+import resting from '../assets/fox/fox-a-resting-v1.png';
+import sleeping from '../assets/fox/fox-a-sleeping-v1.png';
+
+interface Props {
+	pose?: 'sitting' | 'resting' | 'sleeping';
+	decorative?: boolean;
+}
+
+const { pose = 'sitting', decorative = false } = Astro.props;
+const poses = {
+	sitting: { image: sitting, alt: '暖橙色绘本狐狸安静坐着，尖嘴微微抬起，白胸和黑袜清晰可见' },
+	resting: { image: resting, alt: '暖橙色绘本狐狸放松趴卧，睁着眼睛，前爪向前伸展' },
+	sleeping: { image: sleeping, alt: '暖橙色绘本狐狸蜷卧打盹，闭着眼睛，尾巴围在身前' },
+};
+const artwork = poses[pose];
+---
+
+<Image
+	src={artwork.image}
+	alt={decorative ? '' : artwork.alt}
+	width={640}
+	format="webp"
+	quality={85}
+	loading="eager"
+	draggable="false"
+	class="fox-artwork"
+/>
+
+<style>
+	.fox-artwork {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		object-position: center bottom;
+		user-select: none;
+	}
+</style>

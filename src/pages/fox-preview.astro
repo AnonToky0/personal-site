@@ -1,0 +1,206 @@
+---
+import FoxArtwork from '../components/FoxArtwork.astro';
+import FoxBadge from '../components/FoxBadge.astro';
+import FoxPet from '../components/FoxPet.astro';
+import ButterflyArtwork from '../components/ButterflyArtwork.astro';
+
+const poses = [
+	{ id: 'resting' as const, number: '01', title: '放松趴卧', note: '日常陪伴的姿态，安静地看着页面。' },
+	{ id: 'sitting' as const, number: '02', title: '抬头坐姿', note: '注意到来访者，或看一眼飞来的蝴蝶。' },
+	{ id: 'sleeping' as const, number: '03', title: '蜷卧打盹', note: '把尾巴围在身前，安心休息一会儿。' },
+];
+---
+
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>狐狸与青凤蝶 · 互动预览</title>
+	</head>
+	<body>
+		<main>
+			<header class="topbar">
+				<a href="/">← 回到网站</a>
+				<span>FOX COMPANION <span class="divider">/</span> 03</span>
+			</header>
+			<section class="intro" aria-labelledby="page-title">
+				<p class="eyebrow"><span></span> A · 简洁绘本</p>
+				<h1 id="page-title">一只狐狸，<br class="mobile-break" />几种日常。</h1>
+				<p class="description">暖橙色的皮毛，奶油白的胸口，和一点安静的好奇心。<br />沿着你选定的 A，看看它坐着、趴着和睡着的样子。</p>
+				<div class="palette" aria-label="配色：暖橙、奶油白、深棕黑">
+					<span style="--swatch:#e89446"></span><span style="--swatch:#fff1da"></span><span style="--swatch:#44372b"></span>
+					<span class="palette-label">保留绘本笔触与自然比例</span>
+				</div>
+			</section>
+
+			<section class="pose-grid" aria-label="狐狸的三种姿态">
+				{poses.map((pose) => (
+					<article class="pose-card">
+						<div class="card-top"><span>{pose.number}</span><span>A · 绘本狐狸</span></div>
+						<div class:list={['artboard', pose.id]}><FoxArtwork pose={pose.id} /></div>
+						<h2>{pose.title}</h2>
+						<p>{pose.note}</p>
+					</article>
+				))}
+			</section>
+
+			<section class="review-panel" aria-labelledby="preview-title">
+				<div class="review-heading">
+					<p class="eyebrow">ON THE PAGE</p>
+					<h2 id="preview-title">让它待在右下角。</h2>
+					<p>把鼠标移近右下角，狐狸会坐起来。<br />青凤蝶跟随指针，移远后恢复普通光标。</p>
+					<p class="interaction-note">点击狐狸可收起，再点圆标展开。<br />90 秒没有操作，它会安心打盹。</p>
+				</div>
+				<div class="controls">
+					<fieldset>
+						<legend>模式</legend>
+						<div class="choices">
+							{[{ id: 'auto', title: '自动陪伴' }, ...poses.map(({ id, title }) => ({ id, title })), { id: 'badge', title: '圆形图标' }].map(({ id, title }) => (
+								<label><input type="radio" name="pose" value={id} checked={id === 'auto'} /><span>{title}</span></label>
+							))}
+						</div>
+					</fieldset>
+					<fieldset id="size-control">
+						<legend>显示宽度</legend>
+						<div class="choices">
+							{[140, 180, 220].map((size) => (
+								<label><input type="radio" name="size" value={size} checked={size === 180} /><span>{size} px</span></label>
+							))}
+						</div>
+					</fieldset>
+					<fieldset>
+						<legend>页面背景</legend>
+						<div class="choices">
+							<label><input type="radio" name="theme" value="paper" checked /><span>暖纸色</span></label>
+							<label><input type="radio" name="theme" value="white" /><span>纯白</span></label>
+							<label><input type="radio" name="theme" value="night" /><span>深色</span></label>
+						</div>
+					</fieldset>
+					<output id="preview-status" aria-live="off">自动陪伴 · 放松趴卧 · 180 px</output>
+				</div>
+			</section>
+
+			<section class="butterfly-note" aria-label="青凤蝶">
+				<div class="butterfly-sample"><ButterflyArtwork /></div>
+				<div><p class="eyebrow">A SMALL VISITOR</p><h2>一位青绿色的小访客。</h2><p>深色翅面，青绿斑带，和狐狸一样的绘本笔触。<br />这次先让它静静展翅，之后再让翅膀动起来。</p></div>
+			</section>
+			<section class="badge-note" aria-label="圆形图标">
+				<div class="badge-sample"><FoxBadge /></div>
+				<div><h2>收起时，留一张小小的狐脸。</h2><p>48 px 的圆形底，保留尖耳和白脸。网站会记住你的收起选择。</p></div>
+			</section>
+			<footer>本页可自由试姿态与尺寸，选择“自动陪伴”体验完整互动。触屏可点击收起；键盘可用 Tab 选中狐狸，Enter 或空格切换。</footer>
+		</main>
+
+		<FoxPet preview />
+	</body>
+</html>
+
+<script>
+	const preview = document.querySelector<HTMLElement>('#corner-preview');
+	const status = document.querySelector<HTMLOutputElement>('#preview-status');
+	const sizeControl = document.querySelector<HTMLFieldSetElement>('#size-control');
+	const poseLabels: Record<string, string> = { resting: '放松趴卧', sitting: '抬头坐姿', sleeping: '蜷卧打盹', badge: '圆形图标' };
+	function updateStatus() {
+		const state = preview?.dataset.state ?? 'resting';
+		const mode = preview?.dataset.mode ?? 'auto';
+		const butterfly = preview?.dataset.butterfly;
+		const width = Math.round(preview?.getBoundingClientRect().width ?? 180);
+		if (sizeControl) sizeControl.disabled = state === 'badge';
+		const visitor = butterfly === 'following' ? ' · 蝴蝶跟随指针' : '';
+		if (status) status.textContent = (mode === 'auto' ? '自动陪伴' : '姿态预览') + ' · ' + poseLabels[state] + ' · ' + width + ' px' + visitor;
+	}
+	function updatePreview() {
+		const pose = document.querySelector<HTMLInputElement>('input[name="pose"]:checked')?.value ?? 'auto';
+		const size = document.querySelector<HTMLInputElement>('input[name="size"]:checked')?.value ?? '180';
+		const theme = document.querySelector<HTMLInputElement>('input[name="theme"]:checked')?.value ?? 'paper';
+		document.documentElement.dataset.theme = theme;
+		preview?.style.setProperty('--fox-size', size + 'px');
+		preview?.dispatchEvent(new CustomEvent('fox:preview', { detail: { mode: pose } }));
+		updateStatus();
+	}
+	document.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((input) => input.addEventListener('change', updatePreview));
+	preview?.addEventListener('fox:state', updateStatus);
+	preview?.addEventListener('fox:mode', () => {
+		const automatic = document.querySelector<HTMLInputElement>('input[name="pose"][value="auto"]');
+		if (automatic) automatic.checked = true;
+	});
+	customElements.whenDefined('fox-companion').then(updatePreview);
+</script>
+
+<style>
+	:global(*) { box-sizing: border-box; }
+	:global(html) {
+		--page: #f7f5f0; --surface: #fffdf9; --ink: #342f29; --muted: #80786d;
+		--line: #e3ddd1; --accent: #99551f; --selected: #efe4d2; color-scheme: light;
+		background: var(--page); color: var(--ink);
+		font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+	}
+	:global(html[data-theme="white"]) { --page: #fff; --surface: #fafafa; --line: #e7e7e7; }
+	:global(html[data-theme="night"]) {
+		--page: #232721; --surface: #2a2f27; --ink: #f0ebdf; --muted: #b5b7a9;
+		--line: #42493c; --accent: #f2bd85; --selected: #4b4031; color-scheme: dark;
+	}
+	:global(body) { margin: 0; min-width: 280px; }
+	main { width: min(1100px, calc(100% - 80px)); margin: auto; padding-bottom: 220px; }
+	.topbar { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 27px 0; border-bottom: 1px solid var(--line); font-size: 12px; letter-spacing: .09em; color: var(--muted); }
+	a { color: inherit; text-decoration: none; }
+	a:hover { color: var(--accent); }
+	.divider { margin: 0 12px; opacity: .45; }
+	.intro { padding: 58px 0 36px; }
+	.eyebrow { display: flex; align-items: center; gap: 9px; color: var(--accent); font-size: 11px; letter-spacing: .15em; font-weight: 600; margin: 0 0 14px; }
+	.eyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: #d98b42; }
+	h1 { margin: 0; font-family: Georgia, 'SimSun', serif; font-size: clamp(30px, 4.5vw, 48px); font-weight: 500; line-height: 1.4; letter-spacing: .035em; }
+	.mobile-break { display: none; }
+	.description { font-size: 14px; color: var(--muted); line-height: 1.9; margin: 17px 0 21px; }
+	.palette { display: flex; align-items: center; gap: 6px; }
+	.palette > span:not(.palette-label) { width: 15px; height: 15px; border: 1px solid #80786d33; border-radius: 50%; background: var(--swatch); }
+	.palette-label { margin-left: 6px; font-size: 11px; color: var(--muted); }
+	.pose-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+	.pose-card { background: var(--surface); border: 1px solid var(--line); border-radius: 5px; padding: 20px 22px 24px; }
+	.card-top { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; letter-spacing: .12em; }
+	.artboard { height: 238px; width: 100%; padding: 20px 0 18px; }
+	.artboard.sitting { padding: 8px 28px 12px; }
+	h2 { font-size: 17px; font-weight: 500; margin: 0 0 10px; }
+	.pose-card p, .review-heading > p:not(.eyebrow), .badge-note p, .butterfly-note p:not(.eyebrow) { font-size: 12px; line-height: 1.8; margin: 0; color: var(--muted); }
+	.review-heading .interaction-note { padding-top: 14px; }
+	.review-panel { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; margin-top: 38px; padding: 34px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+	.review-heading h2 { font-size: 23px; margin-bottom: 12px; font-family: Georgia, 'SimSun', serif; }
+	fieldset { display: grid; grid-template-columns: 75px 1fr; gap: 7px; border: 0; padding: 0; margin: 0 0 14px; min-width: 0; }
+	legend { float: left; font-size: 12px; line-height: 35px; color: var(--muted); }
+	.choices { display: flex; gap: 6px; flex-wrap: wrap; }
+	.choices label { position: relative; cursor: pointer; }
+	.choices input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+	.choices span { display: block; padding: 9px 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 11px; }
+	.choices input:checked + span { background: var(--selected); border-color: var(--accent); color: var(--accent); }
+	.choices input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
+	fieldset:disabled { opacity: .4; }
+	fieldset:disabled label { cursor: default; }
+	output { display: block; margin-left: 82px; font-size: 11px; color: var(--accent); line-height: 1.8; }
+	.badge-note { display: flex; align-items: center; gap: 18px; margin-top: 26px; }
+	.badge-sample { width: 48px; height: 48px; flex-shrink: 0; }
+	.badge-note h2 { font-size: 13px; margin-bottom: 5px; }
+	.butterfly-note { display: flex; align-items: center; gap: 28px; padding: 28px 0; border-bottom: 1px solid var(--line); }
+	.butterfly-sample { width: 120px; height: 120px; flex-shrink: 0; }
+	footer { font-size: 11px; line-height: 1.9; color: var(--muted); padding-top: 26px; }
+	[hidden] { display: none !important; }
+	@media (max-width: 760px) {
+		main { width: calc(100% - 36px); }
+		.topbar { font-size: 10px; gap: 12px; padding: 22px 0; }
+		.intro { padding: 36px 0 28px; }
+		.pose-grid { grid-template-columns: 1fr; gap: 14px; }
+		.pose-card { padding: 20px 24px; }
+		.artboard { height: 220px; max-width: 320px; margin: auto; }
+		.artboard.sitting { padding: 6px 40px 12px; }
+		.review-panel { grid-template-columns: 1fr; gap: 22px; margin-top: 28px; padding: 26px 0; }
+	}
+	@media (max-width: 390px) {
+		.butterfly-note { gap: 16px; }
+		.butterfly-sample { width: 78px; height: 90px; }
+		.mobile-break { display: inline; }
+		fieldset { grid-template-columns: 1fr; }
+		legend { line-height: 24px; }
+		output { margin-left: 0; }
+	}
+</style>
