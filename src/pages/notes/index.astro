@@ -1,7 +1,30 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import '../../styles/notes.css';
+
+const notes = (await getCollection('notes')).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id),
+);
 ---
 
-<Layout>
-    <h1>Notes</h1>
+<Layout title="Notes" description="文档、学习笔记与实践记录。">
+    <main class="notes-page">
+        <h1>Notes</h1>
+        <p class="notes-intro">文档、学习笔记与实践记录。</p>
+        {notes.length === 0 ? <p>暂无文章。</p> : (
+            <ul class="notes-list">
+                {notes.map(({ id, data }) => (
+                    <li>
+                        <article>
+                            <h2><a href={`/notes/${id.split('/').map(encodeURIComponent).join('/')}/`}>{data.title}</a></h2>
+                            <time datetime={data.date.toISOString()}>{data.date.toISOString().slice(0, 10)}</time>
+                            <p>{data.description}</p>
+                            {data.tags.length > 0 && <ul class="note-tags" aria-label="文章标签">{data.tags.map(tag => <li>{tag}</li>)}</ul>}
+                        </article>
+                    </li>
+                ))}
+            </ul>
+        )}
+    </main>
 </Layout>
