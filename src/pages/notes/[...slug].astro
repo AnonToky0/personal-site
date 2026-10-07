@@ -1,0 +1,33 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/notes.css';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map(note => ({ params: { slug: note.id }, props: { note } }));
+}
+
+interface Props {
+  note: CollectionEntry<'notes'>;
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+const { title, description, date, tags } = note.data;
+---
+
+<Layout title={`${title} | Notes`} description={description}>
+  <main class="notes-page">
+    <a class="notes-back" href="/notes/">← 全部文章</a>
+    <article>
+      <header class="note-heading">
+        <h1>{title}</h1>
+        <time datetime={date.toISOString()}>{date.toISOString().slice(0, 10)}</time>
+        <p class="notes-intro">{description}</p>
+        {tags.length > 0 && <ul class="note-tags" aria-label="文章标签">{tags.map(tag => <li>{tag}</li>)}</ul>}
+      </header>
+      <div class="note-content"><Content /></div>
+    </article>
+  </main>
+</Layout>
