@@ -3,6 +3,7 @@ import FoxArtwork from '../components/FoxArtwork.astro';
 import FoxBadge from '../components/FoxBadge.astro';
 import FoxPet from '../components/FoxPet.astro';
 import ButterflyArtwork from '../components/ButterflyArtwork.astro';
+import FoxSittingRig from '../components/FoxSittingRig.astro';
 
 const poses = [
 	{ id: 'resting' as const, number: '01', title: '放松趴卧', note: '日常陪伴的姿态，安静地看着页面。' },
@@ -21,7 +22,7 @@ const poses = [
 	</head>
 	<body>
 		<main>
-			<header class="topbar">
+			<header class="topbar" data-fox-boundary>
 				<a href="/">← 回到网站</a>
 				<span>FOX COMPANION <span class="divider">/</span> 03</span>
 			</header>
@@ -50,7 +51,8 @@ const poses = [
 				<div class="review-heading">
 					<p class="eyebrow">ON THE PAGE</p>
 					<h2 id="preview-title">让它待在右下角。</h2>
-					<p>把鼠标移近右下角，狐狸会坐起来。<br />青凤蝶跟随指针，移远后恢复普通光标。</p>
+					<p>把鼠标移到顶部菜单栏左右、再向外一点的留白，狐狸会坐起来。<br />青凤蝶跟随指针，狐狸轻轻抬头、低头看它。</p>
+					<p class="interaction-note">菜单栏两侧各留出 24 px 的缓冲，返回中间区域恢复普通光标。<br />窗口较窄时关闭两侧互动；开启系统“减少动态效果”时，狐狸保持静止。</p>
 					<p class="interaction-note">点击狐狸可收起，再点圆标展开。<br />90 秒没有操作，它会安心打盹。</p>
 				</div>
 				<div class="controls">
@@ -79,6 +81,17 @@ const poses = [
 						</div>
 					</fieldset>
 					<output id="preview-status" aria-live="off">自动陪伴 · 放松趴卧 · 180 px</output>
+				</div>
+			</section>
+
+			<section class="gaze-review" aria-labelledby="gaze-title">
+				<p class="eyebrow">FOLLOWING THE BUTTERFLY</p>
+				<h2 id="gaze-title">一点轻轻的转动。</h2>
+				<p>身体保持不动，头部随着蝴蝶的高低轻轻转动。下面是动作两端与自然姿态的对照。</p>
+				<div class="gaze-grid">
+					{[{ label: '低头', angle: -18 }, { label: '自然', angle: 0 }, { label: '抬头', angle: 22 }].map(({ label, angle }) => (
+						<figure><div class="gaze-art" aria-hidden="true"><FoxSittingRig angle={angle} /></div><figcaption>{label}</figcaption></figure>
+					))}
 				</div>
 			</section>
 
@@ -183,6 +196,13 @@ const poses = [
 	.badge-note h2 { font-size: 13px; margin-bottom: 5px; }
 	.butterfly-note { display: flex; align-items: center; gap: 28px; padding: 28px 0; border-bottom: 1px solid var(--line); }
 	.butterfly-sample { width: 120px; height: 120px; flex-shrink: 0; }
+	.gaze-review { padding: 32px 0; border-bottom: 1px solid var(--line); }
+	.gaze-review > p:not(.eyebrow) { color: var(--muted); font-size: 12px; line-height: 1.8; }
+	.gaze-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 24px; }
+	.gaze-grid figure { margin: 0; padding: 20px 0 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 5px; }
+	.gaze-art { position: relative; width: min(220px, 100%); aspect-ratio: 1; margin: auto; }
+	.gaze-grid figcaption { text-align: center; margin-top: 14px; font-size: 12px; color: var(--muted); }
+	@media (max-width: 520px) { .gaze-grid { grid-template-columns: 1fr; } }
 	footer { font-size: 11px; line-height: 1.9; color: var(--muted); padding-top: 26px; }
 	[hidden] { display: none !important; }
 	@media (max-width: 760px) {

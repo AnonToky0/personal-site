@@ -1,0 +1,44 @@
+---
+import { Image } from 'astro:assets';
+import sitting from '../assets/fox/fox-a-sitting-v1.png';
+import neck from '../assets/fox/fox-a-neck-v1.png';
+interface Props { angle?: number; }
+const { angle } = Astro.props;
+---
+
+<span class:list={['sitting-rig', { 'angle-sample': angle !== undefined }]} data-fox-rig data-ready={angle !== undefined ? 'true' : undefined} style={angle !== undefined ? `--fox-head-angle: ${angle}deg` : undefined}>
+	<Image src={sitting} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" class="fallback" />
+	<span class="layers">
+		<Image src={neck} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" class="neck" data-fox-neck />
+		<Image src={sitting} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" class="body" />
+		<span class="head" data-fox-head>
+			<Image src={sitting} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" />
+		</span>
+	</span>
+</span>
+
+<style>
+	.sitting-rig { display: block; position: absolute; inset: 0; pointer-events: none; }
+	.sitting-rig img { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; }
+	.layers { position: absolute; inset: 0; visibility: hidden; }
+	.sitting-rig[data-ready="true"] .layers { visibility: visible; }
+	.sitting-rig[data-ready="true"] .fallback { visibility: hidden; }
+	/* Keep an opaque neck behind the moving head. The approved body takes over
+	   below the join; the head's irregular edge follows the painted fur. */
+	.neck { mask-image: linear-gradient(#000 39%, transparent 42%); }
+	.body { mask-image: linear-gradient(transparent 28%, #000 29%); }
+	.head {
+		position: absolute; inset: 0;
+		transform-origin: 38% 30%;
+		transform: rotate(var(--fox-head-angle, 0deg));
+		transition: transform 160ms ease-out;
+	}
+	.head img {
+		clip-path: polygon(0 0, 100% 0, 100% 30%, 49% 30%, 50% 33%, 46% 32%, 47% 36%, 43% 34%, 41% 37%, 38% 35%, 35% 38%, 33% 35%, 30% 36%, 28% 33%, 25% 34%, 25% 31%, 0 29%);
+	}
+	.angle-sample .head { transition: none; }
+	@media (prefers-reduced-motion: reduce) {
+		.head { transition: none; }
+		.sitting-rig:not(.angle-sample) .head { transform: none; }
+	}
+</style>
