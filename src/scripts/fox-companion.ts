@@ -1,4 +1,6 @@
 import { FoxBehavior, type FoxMode } from './fox-behavior';
+import { FOX_GUTTER_PADDING, isInSideGutter } from './fox-pointer';
+import { getFoxHeadAngle } from './fox-gaze';
 
 const STORAGE_KEY = 'personal-site:fox-collapsed:v1';
 const MODES = new Set<FoxMode>(['auto', 'resting', 'sitting', 'sleeping', 'badge']);
@@ -12,7 +14,10 @@ class FoxCompanion extends HTMLElement {
 	private toggle!: HTMLButtonElement;
 	private butterfly!: HTMLElement;
 	private butterflyImage!: HTMLImageElement;
+	private rig?: HTMLElement;
+	private rigImages: HTMLImageElement[] = [];
 	private finePointer!: MediaQueryList;
+	private boundary!: HTMLElement;
 	private pointer = { x: 0, y: 0 };
 	private lastView = '';
 
@@ -21,8 +26,11 @@ class FoxCompanion extends HTMLElement {
 		this.toggle = this.querySelector<HTMLButtonElement>('[data-fox-toggle]')!;
 		this.butterfly = this.querySelector<HTMLElement>('[data-butterfly]')!;
 		this.butterflyImage = this.butterfly.querySelector<HTMLImageElement>('img')!;
+		this.rig = this.querySelector<HTMLElement>('[data-fox-rig]') ?? undefined;
+		this.rigImages = Array.from(this.rig?.querySelectorAll<HTMLImageElement>('img') ?? []);
 		if (!this.toggle || !this.butterflyImage) return;
 		this.events = new AbortController();
+		this.boundary = document.querySelector<HTMLElement>('[data-fox-boundary]') ?? document.body;
 		const signal = this.events.signal;
 		const now = performance.now();
 		this.behavior = new FoxBehavior(now);
@@ -53,7 +61,7 @@ class FoxCompanion extends HTMLElement {
 			this.render();
 		}, { signal });
 
-		document.addEventListener('pointermove', (event) => {
+		const handlePointer = (event: PointerEvent) => {
 			const now = performance.now();
 			if (event.pointerType !== 'mouse' || !this.finePointer.matches) {
 				this.behavior.leavePointer();
@@ -63,21 +71,19 @@ class FoxCompanion extends HTMLElement {
 			}
 			if (!this.behavior.active && !document.hidden) this.setActive(true);
 			this.pointer = { x: event.clientX, y: event.clientY };
-			const rect = this.toggle.getBoundingClientRect();
-			const margin = this.behavior.near ? 110 : 72;
-			const dx = Math.max(rect.left - event.clientX, 0, event.clientX - rect.right);
-			const dy = Math.max(rect.top - event.clientY, 0, event.clientY - rect.bottom);
-			const near = this.behavior.view(now).state !== 'badge' && Math.hypot(dx, dy) < margin;
-			this.behavior.pointer(now, near);
+			this.behavior.pointer(now, this.behavior.near, this.behavior.inSideGutter);
 			this.queueRender();
-		}, { signal, passive: true });
+		};
+		document.addEventListener('pointermove', handlePointer, { signal, passive: true });
+		// A tap on a hybrid touch/mouse device may have no pointermove. Process
+		// pointerdown too so it cannot leave a mouse-only butterfly behind.
+		document.addEventListener('pointerdown', handlePointer, { signal, passive: true });
 		document.addEventListener('pointerout', (event) => {
 			if (event.relatedTarget !== null) return;
 			this.behavior.leavePointer();
 			this.render();
 		}, { signal });
 		const activity = () => { this.behavior.activity(performance.now()); this.queueRender(); };
-		document.addEventListener('pointerdown', activity, { signal, passive: true });
 		document.addEventListener('keydown', activity, { signal });
 		window.addEventListener('scroll', activity, { signal, passive: true });
 		window.addEventListener('blur', () => this.setActive(false), { signal });
@@ -107,9 +113,13 @@ class FoxCompanion extends HTMLElement {
 			this.behavior.setMode(mode, performance.now());
 			this.render();
 		}, { signal });
-		this.butterflyImage.addEventListener('load', () => this.render(), { signal });
+		for (const image of [this.butterflyImage, ...this.rigImages]) {
+			image.addEventListener('load', () => this.render(), { signal });
+			image.addEventListener('error', () => this.render(), { signal });
+		}
 		this.resizeObserver = new ResizeObserver(() => this.queueRender());
 		this.resizeObserver.observe(this.toggle);
+		this.resizeObserver.observe(this.boundary);
 		this.setActive(!document.hidden);
 	}
 
@@ -132,7 +142,30 @@ class FoxCompanion extends HTMLElement {
 		});
 	}
 
+	private updatePointerRegion() {
+		if (!this.behavior.pointerInside || !this.behavior.active) return;
+		const { x, y } = this.pointer;
+		const target = document.elementFromPoint(x, y);
+		const control = target?.closest('a, button, input, textarea, select, summary, [contenteditable]:not([contenteditable="false"]), [role="button"], [role="link"]');
+		if (!target || (control && control !== this.toggle)) {
+			this.behavior.setPointerRegion(false, false);
+			return;
+		}
+		const rect = this.toggle.getBoundingClientRect();
+		const boundary = this.boundary.getBoundingClientRect();
+		const margin = this.behavior.near ? 110 : 72;
+		const dx = Math.max(rect.left - x, 0, x - rect.right);
+		const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+		// Only direct interaction with the fox can override the protected strip.
+		const overContent = x >= boundary.left - FOX_GUTTER_PADDING &&
+			x <= boundary.right + FOX_GUTTER_PADDING && !this.toggle.contains(target);
+		const near = !overContent && Math.hypot(dx, dy) < margin;
+		const inSideGutter = isInSideGutter(x, boundary, document.documentElement.clientWidth, this.behavior.inSideGutter);
+		this.behavior.setPointerRegion(near, inSideGutter);
+	}
+
 	private render() {
+		this.updatePointerRegion();
 		const view = this.behavior.view(performance.now());
 		this.dataset.state = view.state;
 		this.dataset.mode = this.behavior.mode;
@@ -145,11 +178,19 @@ class FoxCompanion extends HTMLElement {
 		this.dataset.butterfly = butterflyMode;
 		document.documentElement.classList.toggle('fox-cursor-active', butterflyMode === 'following');
 		this.butterfly.hidden = butterflyMode === 'hidden';
+		const rigReady = this.rigImages.length > 0 &&
+			this.rigImages.every(image => image.complete && image.naturalWidth > 0);
+		if (this.rig) this.rig.dataset.ready = String(rigReady);
+		let headAngle = 0;
 		if (butterflyMode !== 'hidden') {
 			const x = Math.max(26, Math.min(innerWidth - 26, this.pointer.x));
 			const y = Math.max(26, Math.min(innerHeight - 26, this.pointer.y));
 			this.butterfly.style.transform = 'translate3d(' + (x - 24) + 'px,' + (y - 24) + 'px,0) rotate(-12deg)';
+			if (rigReady && !this.behavior.reducedMotion && view.state === 'sitting') {
+				headAngle = getFoxHeadAngle({ x, y }, this.toggle.getBoundingClientRect());
+			}
 		}
+		this.style.setProperty('--fox-head-angle', headAngle.toFixed(2) + 'deg');
 		const key = view.state + ':' + butterflyMode + ':' + this.behavior.mode;
 		if (key !== this.lastView) {
 			this.lastView = key;

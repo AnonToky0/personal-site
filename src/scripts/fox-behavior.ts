@@ -17,6 +17,7 @@ export class FoxBehavior {
 	active = true;
 	pointerInside = false;
 	near = false;
+	inSideGutter = false;
 	focused = false;
 	lastActivity: number;
 	lookUntil = 0;
@@ -37,22 +38,29 @@ export class FoxBehavior {
 		// Start a fresh quiet interval when waking from sleep.
 		if (now - this.lastActivity >= FOX_TIMING.idle) {
 			this.nextLook = this.scheduleLook(now);
-			this.near = false;
+			this.setPointerRegion(false, false);
 			this.lookUntil = 0;
 		}
 		this.lastActivity = now;
 	}
 
-	pointer(now: number, near: boolean) {
+	pointer(now: number, near: boolean, inSideGutter = false) {
 		this.activity(now);
 		this.pointerInside = true;
+		this.setPointerRegion(near, inSideGutter);
+	}
+
+	// Layout changes may move the boundary beneath a stationary pointer. Updating
+	// its region must not count as activity or postpone the idle sleep timer.
+	setPointerRegion(near: boolean, inSideGutter: boolean) {
 		this.near = near;
-		if (near) this.lookUntil = 0;
+		this.inSideGutter = inSideGutter;
+		if (near || inSideGutter) this.lookUntil = 0;
 	}
 
 	leavePointer() {
 		this.pointerInside = false;
-		this.near = false;
+		this.setPointerRegion(false, false);
 	}
 
 	setFocus(focused: boolean, now: number) {
@@ -63,7 +71,7 @@ export class FoxBehavior {
 	setCollapsed(collapsed: boolean, now: number) {
 		this.collapsed = collapsed;
 		this.mode = 'auto';
-		this.near = false;
+		this.setPointerRegion(false, false);
 		this.lookUntil = 0;
 		this.activity(now);
 		this.nextLook = this.scheduleLook(now);
@@ -71,14 +79,14 @@ export class FoxBehavior {
 
 	setMode(mode: FoxMode, now: number) {
 		this.mode = mode;
-		this.near = false;
+		this.setPointerRegion(false, false);
 		this.lookUntil = 0;
 		this.activity(now);
 	}
 
 	setActive(active: boolean, now: number) {
 		this.active = active;
-		this.near = false;
+		this.setPointerRegion(false, false);
 		this.pointerInside = false;
 		this.lookUntil = 0;
 		if (active) {
@@ -91,7 +99,7 @@ export class FoxBehavior {
 		if (!this.active || now < this.nextLook) return;
 		const awake = now - this.lastActivity < FOX_TIMING.idle;
 		if (this.mode === 'auto' && !this.collapsed && this.pointerInside && awake &&
-			!this.near && !this.focused && !this.reducedMotion) {
+			!this.near && !this.inSideGutter && !this.focused && !this.reducedMotion) {
 			this.lookUntil = now + FOX_TIMING.lookDuration;
 		}
 		this.nextLook = this.scheduleLook(now);
@@ -102,7 +110,7 @@ export class FoxBehavior {
 		if (this.collapsed) return { state: 'badge', butterfly: 'hidden' };
 		if (now - this.lastActivity >= FOX_TIMING.idle) return { state: 'sleeping', butterfly: 'hidden' };
 		if (!this.active) return { state: 'resting', butterfly: 'hidden' };
-		if (this.near && this.pointerInside) {
+		if ((this.near || this.inSideGutter) && this.pointerInside) {
 			return { state: 'sitting', butterfly: 'following' };
 		}
 		return { state: this.focused || now < this.lookUntil ? 'sitting' : 'resting', butterfly: 'hidden' };

@@ -4,6 +4,37 @@ import { FoxBehavior, FOX_TIMING as t } from '../src/scripts/fox-behavior.ts';
 
 const fox = () => new FoxBehavior(0, () => 0);
 
+test('a side gutter sits the fox even far away, and returning to content clears the butterfly', () => {
+	const f = fox();
+	f.pointer(1, false, true);
+	assert.deepEqual(f.view(1), { state: 'sitting', butterfly: 'following' });
+	f.advance(t.lookMin);
+	assert.equal(f.lookUntil, 0);
+	f.pointer(t.lookMin + 1, false, false);
+	assert.deepEqual(f.view(t.lookMin + 1), { state: 'resting', butterfly: 'hidden' });
+});
+
+test('layout updates do not keep a stationary gutter pointer awake', () => {
+	const f = fox();
+	f.pointer(1, false, true);
+	f.setPointerRegion(false, true);
+	assert.deepEqual(f.view(t.idle + 1), { state: 'sleeping', butterfly: 'hidden' });
+	f.pointer(t.idle + 2, false, true);
+	assert.deepEqual(f.view(t.idle + 2), { state: 'sitting', butterfly: 'following' });
+	f.setPointerRegion(false, false);
+	assert.deepEqual(f.view(t.idle + 2), { state: 'resting', butterfly: 'hidden' });
+});
+
+test('collapse, leaving and loss of focus cancel gutter interaction', () => {
+	for (const cancel of [f => f.setCollapsed(true, 2), f => f.leavePointer(), f => f.setActive(false, 2)]) {
+		const f = fox();
+		f.pointer(1, false, true);
+		cancel(f);
+		assert.equal(f.inSideGutter, false);
+		assert.equal(f.view(2).butterfly, 'hidden');
+	}
+});
+
 test('idle sleep takes priority over a stationary pointer and new input wakes the fox', () => {
 	const f = fox();
 	f.pointer(100, true);
