@@ -1,7 +1,7 @@
 ---
 title: "Socket 编程模型与连接生命周期"
 description: "整理阻塞、非阻塞与异步 I/O，以及连接状态、业务超时、心跳、重连和请求收尾策略。"
-date: 2026-10-07
+date: 2026-10-08
 tags: ["计算机网络", "Socket", "异步编程"]
 ---
 
@@ -855,6 +855,10 @@ Reconnect Backoff
 - [TCP Keep-Alive（Microsoft Learn）](https://learn.microsoft.com/en-us/windows/win32/winsock/tcp-keepalive)
 - [RFC 9293：Transmission Control Protocol（TCP）](https://www.rfc-editor.org/rfc/rfc9293)
 - [RFC 6298：Computing TCP's Retransmission Timer](https://www.rfc-editor.org/rfc/rfc6298)
+
+## 窗口与背压补充
+
+接收窗口、拥塞窗口、ZeroWindow、发送背压与证据边界，见 [TCP 流量控制、拥塞控制与背压](/notes/computer-net/16-tcp-flow-congestion-backpressure/)。
 
 ---
 

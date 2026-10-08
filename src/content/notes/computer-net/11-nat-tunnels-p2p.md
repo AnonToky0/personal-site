@@ -1,7 +1,7 @@
 ---
 title: "NAT、Tunnel 与 P2P 穿透"
 description: "区分 NAT 映射与过滤、隧道封装、P2P 打洞、STUN、TURN、ICE 和信令的职责与排障边界。"
-date: 2026-10-07
+date: 2026-10-08
 tags: ["计算机网络", "NAT", "P2P", "隧道"]
 ---
 
@@ -497,6 +497,17 @@ B → A Candidate
 
 最初的 Packet 可能被 Filtering 丢弃。但双方的主动外发会建立或刷新各自 NAT/Firewall State，后续匹配流量就可能被视为允许的返回或已授权通信。
 
+双方不要求在同一个瞬间发送。真正需要的是：A 与 B 创建的 Mapping / Filtering State 在有效期内发生重叠，并且检查包会在短时间内重试。常见时间线可能是：
+
+```text
+t0  A → B：B 侧状态尚未建立，首包被丢弃
+t1  B → A：B 已建立外发状态，A 侧也已有状态
+t2  A → B：重试成功
+t3  B ↔ A：双向检查完成
+```
+
+因此“同时发包”是便于理解的直觉，不是要求两台机器时钟精确同步。
+
 ### 第五步：确认并选定路径
 
 当 Candidate Pair 的双向检查成功并被 ICE 选定后，Data Plane 可以直接使用这条路径：
@@ -816,3 +827,4 @@ VPN Tunnel
 
 - [学习清单与完整目录](/notes/computer-net/00-learning-roadmap/)
 - [上一章：HTTP、TLS、Proxy、VPN 与抓包边界](/notes/computer-net/10-http-tls-proxy-vpn/)
+- [下一章：DNS 解析链、缓存与故障诊断](/notes/computer-net/12-dns-resolution-cache/)

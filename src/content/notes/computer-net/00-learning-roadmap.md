@@ -1,7 +1,7 @@
 ---
 title: "计算机网络学习清单"
-description: "从网络基础到代理、VPN、抓包和 P2P 的完整学习路线，包含阶段清单、实践实验与完成标准。"
-date: 2026-10-07
+description: "从网络基础到 DNS、抓包、Overlay、IPv6、TCP 背压、SSH 隧道与 TLS 综合排障的学习路线，包含 18 章详解、实践实验与完成标准。"
+date: 2026-10-08
 tags: ["计算机网络", "学习路线"]
 ---
 
@@ -27,7 +27,7 @@ tags: ["计算机网络", "学习路线"]
 
 ## 当前详解文档
 
-这份清单是学习路线和能力检查表，不用复选框代替真实理解。当前已经形成的详解按下面的顺序阅读：
+这份清单是学习路线和能力检查表，不用复选框代替真实理解。当前已经形成的详解如下：
 
 1. [网络整体模型](/notes/computer-net/01-network-model/)
 2. [IPv4 和子网](/notes/computer-net/02-ipv4-subnets/)
@@ -40,8 +40,15 @@ tags: ["计算机网络", "学习路线"]
 9. [Socket 编程模型与连接生命周期](/notes/computer-net/09-socket-lifecycle/)
 10. [HTTP、TLS、Proxy、VPN 与抓包边界](/notes/computer-net/10-http-tls-proxy-vpn/)
 11. [NAT、Tunnel 与 P2P 穿透](/notes/computer-net/11-nat-tunnels-p2p/)
+12. [DNS 解析链、缓存与故障诊断](/notes/computer-net/12-dns-resolution-cache/)
+13. [Wireshark 综合实战](/notes/computer-net/13-wireshark-practice/)
+14. [Overlay 网络、控制面与数据面](/notes/computer-net/14-overlay-control-data-planes/)
+15. [IPv6 地址、邻居发现与双栈排障](/notes/computer-net/15-ipv6-neighbor-discovery-dual-stack/)
+16. [TCP 流量控制、拥塞控制与背压](/notes/computer-net/16-tcp-flow-congestion-backpressure/)
+17. [SSH Tunnel、本地转发、远程转发与动态代理](/notes/computer-net/17-ssh-tunnels-forwarding/)
+18. [综合网络实验与 TLS 身份验证排障](/notes/computer-net/18-network-labs-tls-identity/)
 
-章节编号表示知识依赖顺序，不表示只需背诵一次。后续章节会继续复用前面的封装、下一跳、路由与分层排障模型。
+文件编号主要表示结合对话逐步成稿的顺序，不再严格等于最优知识依赖顺序。例如 DNS 在对话后期才被系统展开，但首次学习时应先掌握 DNS，再深入 HTTP/TLS、Proxy、VPN 和 P2P。实际复习请以文末“推荐学习顺序”为准；后续章节仍会反复复用前面的封装、下一跳、路由与分层排障模型。
 
 ---
 
@@ -463,6 +470,8 @@ ping 不通
 
 ### 11. TCP
 
+窗口与背压详解：[TCP 流量控制、拥塞控制与背压](/notes/computer-net/16-tcp-flow-congestion-backpressure/)。
+
 重点理解：
 
 * [ ] Connection
@@ -475,6 +484,9 @@ ping 不通
 * [ ] 重传
 * [ ] 流量控制
 * [ ] 拥塞控制
+* [ ] `rwnd`、`cwnd`、在途数据与新数据额度的区别
+* [ ] Window Scale、ZeroWindow、Probe 与窗口恢复
+* [ ] 慢启动、拥塞避免、ECN 与重传证据边界
 * [ ] Port
 * [ ] TCP 是字节流，不保留应用消息边界
 * [ ] 半包、一次读取多条消息与应用层 Framing
@@ -672,7 +684,7 @@ IP Address
 ```text
 Application
  ↓
-OS DNS Cache
+System / Application Resolver
  ↓
 Configured DNS Server
  ↓
@@ -689,13 +701,19 @@ Authoritative DNS
 
 * [ ] Recursive DNS
 * [ ] Authoritative DNS
+* [ ] Stub Resolver
+* [ ] Recursive Query 与 Iterative Resolution
 * [ ] DNS Cache
 * [ ] TTL
+* [ ] Negative Cache、NXDOMAIN、NODATA 与 SERVFAIL
 * [ ] A
 * [ ] AAAA
 * [ ] CNAME
 * [ ] NS
 * [ ] MX
+* [ ] SOA
+* [ ] UDP、TCP 与 EDNS(0)
+* [ ] DoT、DoH、DoQ 与 DNSSEC 的不同目标
 
 ---
 
@@ -712,6 +730,23 @@ nslookup google.com
 ```powershell
 nslookup google.com 8.8.8.8
 ```
+
+还应使用并比较：
+
+```powershell
+Get-DnsClientServerAddress
+Get-DnsClientCache
+Resolve-DnsName example.com -Type A
+Resolve-DnsName example.com -Type AAAA
+[System.Net.Dns]::GetHostAddresses('example.com')
+```
+
+理解：
+
+* [ ] `nslookup` 不完整模拟 Hosts、系统策略或浏览器 DoH
+* [ ] 指定 DNS Server 是路径对照，不是绝对权威证明
+* [ ] 同一名称的多个地址、CDN 和 Anycast
+* [ ] Local Resolution 与 Proxy Remote Resolution
 
 查看缓存：
 
@@ -1285,6 +1320,14 @@ VXLAN
 
 ### 36. SSH Tunnel
 
+详解：[SSH Tunnel、本地转发、远程转发与动态代理](/notes/computer-net/17-ssh-tunnels-forwarding/)。
+
+* [ ] `-L` / `-R` / `-D` 的监听方、目标连接方与解析方
+* [ ] `-R` 默认回环监听与 GatewayPorts
+* [ ] bind_address、通配监听与目标 Endpoint：监听 443 不接管所有 HTTPS
+* [ ] SSH Channel 复用、TCP 分段连接和加密边界
+* [ ] curl 的 `socks5` / `socks5h` 与 DNS 解析范围
+
 重点学，因为开发中特别实用。
 
 Local Forward：
@@ -1511,6 +1554,12 @@ ip.addr == 8.8.8.8
 * [ ] 抓到 TLS Ciphertext 不等于能看到 HTTP 明文
 * [ ] TLS Key Log 解密与 TLS Interception Proxy 的区别
 * [ ] 抓包接口和网卡 Offload 会影响看到的封装
+* [ ] Capture Filter 与 Display Filter 的区别
+* [ ] Loopback、TUN 与 Physical NIC 是不同抓包点
+* [ ] `tcp.analysis.*` 是启发式分析而不是线上 Header 字段
+* [ ] Relative Sequence Number 与真实 ISN
+* [ ] Follow TCP Stream 重组 Byte Stream，不定义应用消息边界
+* [ ] ACK、RST、FIN、Zero Window 的证据边界
 
 ---
 
@@ -1888,6 +1937,17 @@ VXLAN
 
 背后的核心思想。
 
+进一步掌握：
+
+* [ ] Underlay 与 Overlay
+* [ ] Inner Route、Outer Route 与 Tunnel Endpoint
+* [ ] Control Plane 与 Data Plane
+* [ ] Hub-and-Spoke、Mesh 与 Partial Mesh
+* [ ] L2 Overlay 与 L3 Overlay
+* [ ] Subnet Router、Exit Node 与 Relay
+* [ ] Prefix Overlap、MTU、DNS 与 ACL 故障
+* [ ] Virtual IP 与密码学 Identity 的区别
+
 ---
 
 ## 第二十四阶段：IPv6
@@ -1900,18 +1960,32 @@ VXLAN
 
 * [ ] 为什么需要 IPv6
 * [ ] 128-bit address
-* [ ] Link-local
-* [ ] Global address
-* [ ] `::1`
-* [ ] SLAAC
-* [ ] Neighbor Discovery
+* [ ] 十六进制表示、前导零省略与 `::` 压缩规则
+* [ ] `::`、`::1` 与文档前缀 `2001:db8::/32`
+* [ ] Link-local `fe80::/10` 与 Zone/Scope ID
+* [ ] Global Unicast、ULA 与 Multicast
+* [ ] 一块接口上的多个地址与源地址选择
+* [ ] Prefix Length 与普通 SLAAC LAN 的 `/64`
+* [ ] IPv6 Header、Next Header 与 Hop Limit
+* [ ] Router 不分片、ICMPv6 Packet Too Big 与 PMTUD
+* [ ] SLAAC、RA、DAD 与 DHCPv6 的职责边界
+* [ ] Neighbor Discovery：RS、RA、NS、NA、Redirect
+* [ ] IPv6 无 Broadcast，NDP 使用 Multicast
+* [ ] ICMPv6 不是只给 `ping` 使用
 * [ ] IPv6 为什么通常不需要传统 NAT
+* [ ] NAT 与 Stateful Firewall 的区别
+* [ ] A / AAAA、Dual Stack 与 Happy Eyeballs
+* [ ] NAT64 / DNS64 / 464XLAT 的基本用途
+* [ ] Windows 地址、接口、Route 与 Neighbor 排查
+* [ ] Wireshark 观察 IPv6、ICMPv6 与 NDP
 
 不用一开始深入各种 IPv6 扩展头。
 
 ---
 
 ## 第二十五阶段：最终综合实验
+
+详解：[综合网络实验与 TLS 身份验证排障](/notes/computer-net/18-network-labs-tls-identity/)。包含证据边界、hostname mismatch 案例、SNI/SAN、固定地址但保留名称的 curl 对照，以及实验记录模板。理论题判断与实际实验完成分别记录。
 
 最后给自己做一个完整网络实验。
 
@@ -2079,7 +2153,7 @@ Relay Candidate
         ↓
 ⑤ ICMP / ping / tracert
         ↓
-⑥ TCP / UDP / Port / Socket / Framing / Connection Lifecycle
+⑥ TCP / UDP / Port / Socket / Framing / Connection Lifecycle / Flow & Congestion Control
         ↓
 ⑦ DNS
         ↓
@@ -2093,7 +2167,7 @@ Relay Candidate
         ↓
 ⑫ VPN / TUN
         ↓
-⑬ Tunnel
+⑬ Tunnel / SSH -L / -R / -D
         ↓
 ⑭ Wireshark
         ↓
@@ -2104,6 +2178,10 @@ Relay Candidate
 ⑰ STUN / TURN / ICE
         ↓
 ⑱ Overlay Network
+        ↓
+⑲ IPv6 / NDP / Dual Stack
+        ↓
+⑳ 综合实验 / 路径对照 / TLS 身份验证排障
 ```
 
 不要把：

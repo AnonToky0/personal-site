@@ -1,7 +1,7 @@
 ---
 title: "HTTP、TLS、Proxy、VPN 与抓包边界"
 description: "沿实际通信路径区分 HTTP、TLS、代理、VPN 与抓包工具，理解连接参与者及明文的出现位置。"
-date: 2026-10-07
+date: 2026-10-08
 tags: ["计算机网络", "HTTP", "TLS", "代理", "VPN"]
 ---
 
@@ -733,6 +733,10 @@ TLS Interception Proxy
 - [RFC 9114：HTTP/3](https://www.rfc-editor.org/rfc/rfc9114)
 - [RFC 1928：SOCKS Protocol Version 5](https://www.rfc-editor.org/rfc/rfc1928)
 - [Wireshark TLS Wiki](https://wiki.wireshark.org/TLS)
+
+## 综合诊断补充
+
+DNS 有答案不等于地址正确，独立 TCP 测试也不证明 curl 使用相同路径。证书名称不匹配的完整案例与对照步骤见 [综合网络实验与 TLS 身份验证排障](/notes/computer-net/18-network-labs-tls-identity/)。
 
 ---
 
