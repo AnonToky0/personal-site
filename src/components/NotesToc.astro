@@ -1,0 +1,33 @@
+---
+interface Props { headings: { depth: number; slug: string; text: string }[]; }
+const { headings } = Astro.props;
+const items = headings.filter(heading => heading.depth === 2 || heading.depth === 3);
+---
+{items.length > 0 && <aside class="notes-toc" aria-label="本文目录">
+  <details class="toc-disclosure" open>
+    <summary>本文目录 <span aria-hidden="true">⌄</span></summary>
+    <nav><ul>{items.map(item => <li class:list={{ 'toc-child': item.depth === 3 }}><a href={`#${item.slug}`} data-toc-link>{item.text}</a></li>)}</ul></nav>
+  </details>
+  <a class="back-to-top" href="#article-top">↑ 回到顶部</a>
+</aside>}
+<script>
+  const disclosure = document.querySelector<HTMLDetailsElement>('.toc-disclosure');
+  const compact = matchMedia('(max-width: 1200px)');
+  const setDisclosure = () => { if (disclosure) disclosure.open = !compact.matches; };
+  setDisclosure();
+  compact.addEventListener('change', setDisclosure);
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+  const sections = links.map(link => document.getElementById(decodeURIComponent(link.hash.slice(1))));
+  let scheduled = false;
+  function updateActive() {
+    scheduled = false;
+    let active = -1;
+    sections.forEach((section, index) => { if (section && section.getBoundingClientRect().top <= 160) active = index; });
+    links.forEach((link, index) => {
+      if (index === active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('scroll', () => { if (!scheduled) { scheduled = true; requestAnimationFrame(updateActive); } }, { passive: true });
+  updateActive();
+</script>

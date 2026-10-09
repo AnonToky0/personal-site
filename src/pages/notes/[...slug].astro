@@ -1,33 +1,54 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import NotesSidebar from '../../components/NotesSidebar.astro';
+import NotesToc from '../../components/NotesToc.astro';
+import { groupNotes, noteUrl, topicId } from '../../lib/notes';
 import '../../styles/notes.css';
-
 export async function getStaticPaths() {
-  const notes = await getCollection('notes');
-  return notes.map(note => ({ params: { slug: note.id }, props: { note } }));
+  return (await getCollection('notes')).map(note => ({ params: { slug: note.id }, props: { note } }));
 }
-
-interface Props {
-  note: CollectionEntry<'notes'>;
-}
-
+interface Props { note: CollectionEntry<'notes'>; }
 const { note } = Astro.props;
-const { Content } = await render(note);
+const notes = await getCollection('notes');
+const group = groupNotes(notes).find(group => group.id === topicId(note))!;
+const index = group.notes.findIndex(item => item.id === note.id);
+const previous = group.notes[index - 1];
+const next = group.notes[index + 1];
+const { Content, headings } = await render(note);
 const { title, description, date, tags } = note.data;
 ---
-
-<Layout title={`${title} | Notes`} description={description}>
-  <main class="notes-page">
-    <a class="notes-back" href="/notes/">← 全部文章</a>
-    <article>
-      <header class="note-heading">
-        <h1>{title}</h1>
-        <time datetime={date.toISOString()}>{date.toISOString().slice(0, 10)}</time>
-        <p class="notes-intro">{description}</p>
-        {tags.length > 0 && <ul class="note-tags" aria-label="文章标签">{tags.map(tag => <li>{tag}</li>)}</ul>}
-      </header>
-      <div class="note-content"><Content /></div>
-    </article>
-  </main>
+<Layout title={`${title} | Notes`} description={description} notes>
+  <div class="notes-shell">
+    <NotesSidebar notes={notes} current={note.id} />
+    <main id="main-content" class="notes-main">
+      <article id="article-top">
+        <header class="note-heading">
+          <nav class="note-breadcrumb" aria-label="当前位置"><a href="/notes/">Notes</a><span aria-hidden="true">/</span><a href={noteUrl(group.notes[0].id)}>{group.title}</a></nav>
+          <h1>{title}</h1>
+          <p class="notes-intro">{description}</p>
+          <div class="note-meta"><time datetime={date.toISOString()}>{date.toISOString().slice(0, 10)}</time><span aria-hidden="true">·</span><span>{group.title}</span></div>
+          {tags.length > 0 && <ul class="note-tags" aria-label="文章标签">{tags.map(tag => <li>{tag}</li>)}</ul>}
+        </header>
+        <div class="mobile-toc-slot"></div>
+        <div class="note-content"><Content /></div>
+        <nav class="note-pagination" aria-label="同主题相邻文章">
+          {previous ? <a href={noteUrl(previous.id)}><span>← 上一篇</span><strong>{previous.data.title}</strong></a> : <span />}
+          {next && <a class="next-note" href={noteUrl(next.id)}><span>下一篇 →</span><strong>{next.data.title}</strong></a>}
+        </nav>
+      </article>
+    </main>
+    <NotesToc headings={headings} />
+  </div>
 </Layout>
+<script>
+  const toc = document.querySelector('.notes-toc');
+  const shell = document.querySelector('.notes-shell');
+  const slot = document.querySelector('.mobile-toc-slot');
+  const compact = matchMedia('(max-width: 1200px)');
+  function placeToc() {
+    if (toc && shell && slot) (compact.matches ? slot : shell).append(toc);
+  }
+  placeToc();
+  compact.addEventListener('change', placeToc);
+</script>
