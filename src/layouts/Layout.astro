@@ -5,13 +5,14 @@ import FoxPet from '../components/FoxPet.astro';
 interface Props {
 	title?: string;
 	description?: string;
+	notes?: boolean;
 }
 
-const { title = 'Astro Basics', description } = Astro.props;
+const { title = 'Astro Basics', description, notes = false } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={notes ? 'zh-CN' : 'en'}>
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -21,8 +22,9 @@ const { title = 'Astro Basics', description } = Astro.props;
 		<title>{title}</title>
 		{description && <meta name="description" content={description} />}
 	</head>
-	<body>
-		<Header />
+	<body class:list={{ 'notes-site': notes }}>
+		{notes && <a class="skip-link" href="#main-content">跳到正文</a>}
+		<Header notes={notes} />
 		
 		<slot />
 		<FoxPet />

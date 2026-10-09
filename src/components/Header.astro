@@ -1,10 +1,19 @@
-<nav data-fox-boundary>
+---
+interface Props { notes?: boolean; }
+const { notes = false } = Astro.props;
+---
+<header class:list={{ 'notes-header': notes }}>
+<div class:list={{ 'notes-header-inner': notes }} data-fox-boundary>
+{notes && <a class="notes-brand" href="/notes/">Notes<span>学习 · 记录 · 回看</span></a>}
+<nav aria-label="全站导航">
     <a href="/">Home</a>
-    <a href="/notes">Notes</a>
+    <a href="/notes" aria-current={notes ? 'page' : undefined}>Notes</a>
     <a href="/projects">Projects</a>
     <a href="/about">About</a>
     <a href="/fox-preview">Fox</a>
 </nav>
+</div>
+</header>
 
 <style>
     nav { display: flex; gap: 26px; flex-wrap: wrap; padding: 24px 0; margin-bottom: 32px; border-bottom: 1px solid #e3ddd1; }

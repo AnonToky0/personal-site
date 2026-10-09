@@ -1,0 +1,33 @@
+---
+import { groupNotes, noteUrl, navTitle, type Note } from '../lib/notes';
+interface Props { notes: Note[]; current?: string; }
+const { notes, current } = Astro.props;
+const groups = groupNotes(notes);
+---
+<aside class="notes-sidebar">
+  <details class="notes-navigation" open>
+    <summary class="mobile-nav-label">文章导航 <span aria-hidden="true">⌄</span></summary>
+    <nav aria-label="笔记主题与文章">
+      <a class="notes-overview" href="/notes/" aria-current={!current ? 'page' : undefined}>全部笔记 <span>{notes.length}</span></a>
+      <p class="sidebar-caption">按主题阅读</p>
+      {groups.map(group => (
+        <details class="topic-group" open={group.notes.some(note => note.id === current) || !current}>
+          <summary>{group.title}<span class="topic-count">{group.notes.length}</span><span class="topic-chevron" aria-hidden="true">›</span></summary>
+          <ul>{group.notes.map(note => (
+            <li><a href={noteUrl(note.id)} aria-current={note.id === current ? 'page' : undefined} title={note.data.title}>
+              <span class="chapter-number" aria-hidden="true">{note.id.split('/').at(-1)?.match(/^\d+/)?.[0] ?? '·'}</span>
+              <span>{navTitle(note)}</span>
+            </a></li>
+          ))}</ul>
+        </details>
+      ))}
+    </nav>
+  </details>
+</aside>
+<script>
+  const navigation = document.querySelector<HTMLDetailsElement>('.notes-navigation');
+  const mobile = matchMedia('(max-width: 820px)');
+  const update = () => { if (navigation) navigation.open = !mobile.matches; };
+  update();
+  mobile.addEventListener('change', update);
+</script>
