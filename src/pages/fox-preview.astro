@@ -4,6 +4,7 @@ import FoxBadge from '../components/FoxBadge.astro';
 import FoxPet from '../components/FoxPet.astro';
 import ButterflyArtwork from '../components/ButterflyArtwork.astro';
 import FoxSittingRig from '../components/FoxSittingRig.astro';
+import FoxMotionPreview from '../components/FoxMotionPreview.astro';
 
 const poses = [
 	{ id: 'resting' as const, number: '01', title: '放松趴卧', note: '日常陪伴的姿态，安静地看着页面。' },
@@ -36,6 +37,8 @@ const poses = [
 				</div>
 			</section>
 
+			<FoxMotionPreview />
+
 			<section class="pose-grid" aria-label="狐狸的三种姿态">
 				{poses.map((pose) => (
 					<article class="pose-card">
@@ -54,6 +57,7 @@ const poses = [
 					<p>把鼠标移到顶部菜单栏左右、再向外一点的留白，狐狸会坐起来。<br />青凤蝶跟随指针，狐狸轻轻抬头、低头看它。</p>
 					<p class="interaction-note">菜单栏两侧各留出 24 px 的缓冲，返回中间区域恢复普通光标。<br />窗口较窄时关闭两侧互动；开启系统“减少动态效果”时，狐狸保持静止。</p>
 					<p class="interaction-note">点击狐狸可收起，再点圆标展开。<br />90 秒没有操作，它会安心打盹。</p>
+					<p class="interaction-note">切换姿态可看坐起、趴下、入睡和苏醒。<br />坐姿与睡姿之间，会先经过趴卧。</p>
 				</div>
 				<div class="controls">
 					<fieldset>
@@ -115,6 +119,7 @@ const poses = [
 	const status = document.querySelector<HTMLOutputElement>('#preview-status');
 	const sizeControl = document.querySelector<HTMLFieldSetElement>('#size-control');
 	const poseLabels: Record<string, string> = { resting: '放松趴卧', sitting: '抬头坐姿', sleeping: '蜷卧打盹', badge: '圆形图标' };
+	const transitionLabels: Record<string, string> = { rise: '正在坐起', lie: '正在趴下', sleep: '慢慢入睡', wake: '正在醒来' };
 	function updateStatus() {
 		const state = preview?.dataset.state ?? 'resting';
 		const mode = preview?.dataset.mode ?? 'auto';
@@ -122,7 +127,8 @@ const poses = [
 		const width = Math.round(preview?.getBoundingClientRect().width ?? 180);
 		if (sizeControl) sizeControl.disabled = state === 'badge';
 		const visitor = butterfly === 'following' ? ' · 蝴蝶跟随指针' : '';
-		if (status) status.textContent = (mode === 'auto' ? '自动陪伴' : '姿态预览') + ' · ' + poseLabels[state] + ' · ' + width + ' px' + visitor;
+		const poseLabel = transitionLabels[preview?.dataset.transition ?? 'none'] ?? poseLabels[state];
+		if (status) status.textContent = (mode === 'auto' ? '自动陪伴' : '姿态预览') + ' · ' + poseLabel + ' · ' + width + ' px' + visitor;
 	}
 	function updatePreview() {
 		const pose = document.querySelector<HTMLInputElement>('input[name="pose"]:checked')?.value ?? 'auto';

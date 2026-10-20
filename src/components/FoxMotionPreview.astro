@@ -1,0 +1,115 @@
+---
+import atlas from '../assets/fox/motion/fox-motion-v2.webp';
+import FoxArtwork from './FoxArtwork.astro';
+import { FOX_CLIPS, motionDuration } from '../scripts/fox-motion';
+---
+
+<fox-motion-preview id="motion-preview" class="motion-preview" style={`--fox-atlas: url("${atlas.src}")`}>
+	<header class="motion-heading">
+		<div><p class="eyebrow">A LITTLE MORE ALIVE · 连续动作</p><h2>还是它，慢慢动起来。</h2><p class="intro-note">沿用原来的三种姿态，补上坐起、趴下、入睡和醒来的过程。<br />右下角也已更新，可以在下方切换姿态体验。</p></div>
+		<span class="version">四段动作 / 已接入网页</span>
+	</header>
+	<div class="motion-layout">
+		<div class="motion-stage">
+			<div class="stage-top"><span data-motion-title>完整日常</span><span data-motion-state>正在准备画面</span></div>
+			<div class="stage-art"><span class="motion-sprite hero-sprite" data-motion-sprite data-endpoint="resting" role="img" aria-label="绘本狐狸，放松趴卧">{(['resting','sitting','sleeping'] as const).map(pose => <span class="original-pose" data-original={pose}><FoxArtwork pose={pose} decorative /></span>)}</span></div>
+			<div class="ground-line"></div>
+			<p class="motion-caption" data-motion-beat>安静地陪你一会儿</p>
+			<div class="sequence-path" aria-label="完整播放顺序"><span data-path="rise">趴卧 → 坐起</span><i>·</i><span data-path="lie">趴下</span><i>·</i><span data-path="sleep">入睡</span><i>·</i><span data-path="wake">醒来</span></div>
+		</div>
+		<div class="motion-controls">
+			<p class="control-label">选择一段，仔细看看</p>
+			<div class="clip-list">
+				<button type="button" data-clip="all" aria-pressed="true" disabled><span class="clip-number">↻</span><span><strong>完整日常</strong><small>趴卧 → 坐起 → 趴下 → 入睡 → 醒来</small></span><span class="clip-duration">{(motionDuration('all') / 1000).toFixed(1)}s</span></button>
+				{FOX_CLIPS.map((clip, i) => <button type="button" data-clip={clip.id} aria-pressed="false" disabled><span class="clip-number">0{i + 1}</span><span><strong>{clip.title}</strong><small>{clip.from} → {clip.to}</small></span><span class="clip-duration">{(motionDuration(clip.id) / 1000).toFixed(1)}s</span></button>)}
+			</div>
+			<div class="settings-row"><label>播放速度<select data-motion-speed disabled><option value="0.5">0.5× 慢慢看</option><option value="1" selected>1× 正常</option><option value="1.5">1.5× 轻快</option></select></label><label class="loop-label"><input type="checkbox" data-motion-loop disabled />循环播放</label></div>
+			<label class="background-control">预览背景<select data-motion-background><option value="paper">暖纸色</option><option value="white">纯白</option><option value="night">深色</option></select></label>
+			<p class="motion-notice" data-motion-notice role="status">正在加载动作素材…</p>
+		</div>
+	</div>
+	<div class="transport">
+		<button class="play-button" type="button" data-motion-play disabled>播放</button><button type="button" data-motion-restart disabled>从头播放</button>
+		<label class="timeline-label"><span class="sr-only">动作进度</span><input type="range" data-motion-progress min="0" max={motionDuration('all')} value="0" step="1" disabled /></label><output data-motion-time aria-live="off">0.0 / 11.3 s</output>
+	</div>
+	<div class="frame-heading"><p><span data-frame-title>坐起来</span><span class="muted"> · 点击画面逐帧查看</span></p><div><button type="button" data-motion-prev disabled aria-label="上一帧">← 上一帧</button><button type="button" data-motion-next disabled aria-label="下一帧">下一帧 →</button></div></div>
+	<div class="frame-strip" aria-label="当前动作的八个姿态">
+		{Array.from({ length: 8 }, (_, i) => <button type="button" data-motion-frame={i} aria-label={`查看第 ${i + 1} 帧`} disabled><span class="motion-sprite frame-sprite" style={`background-position: ${i / 7 * 100}% 0%`}></span><span class="frame-number">{String(i + 1).padStart(2, '0')}</span></button>)}
+	</div>
+	<details class="actual-size"><summary>看看 180 px 的网页显示效果</summary><div class="actual-stage"><span class="motion-sprite actual-sprite" data-motion-sprite data-endpoint="resting" role="img" aria-label="狐狸在网页中的实际大小">{(['resting','sitting','sleeping'] as const).map(pose => <span class="original-pose" data-original={pose}><FoxArtwork pose={pose} decorative /></span>)}</span><p>与上方动作同步 · 180 px</p></div></details>
+	<img data-motion-atlas src={atlas.src} width={atlas.width} height={atlas.height} alt="" hidden loading="eager" />
+	<noscript><p>开启 JavaScript 后可播放动作。下面是完整动作分镜。</p><img src={atlas.src} alt="狐狸坐起、趴下、入睡、醒来的四组连续姿态" style="width:100%;height:auto" /></noscript>
+</fox-motion-preview>
+
+<script>
+	import '../scripts/fox-motion-preview';
+</script>
+
+<style>
+	.motion-preview { --motion-page: #f7f5f0; --motion-surface: #fffdf9; --motion-ink: #342f29; --motion-muted: #80786d; --motion-line: #e3ddd1; --motion-accent: #99551f; --motion-selected: #efe4d2; display: block; margin: 8px 0 46px; scroll-margin-top: 24px; color: var(--motion-ink); }
+	.motion-preview[data-background="white"] { --motion-page: #fff; --motion-surface: #fafafa; }
+	.motion-preview[data-background="night"] { --motion-page: #232721; --motion-surface: #2a2f27; --motion-ink: #f0ebdf; --motion-muted: #b5b7a9; --motion-line: #42493c; --motion-accent: #f2bd85; --motion-selected: #4b4031; }
+	.motion-heading { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding: 28px 0 24px; border-top: 1px solid var(--line, #e3ddd1); color: var(--ink, #342f29); }
+	.eyebrow { margin: 0 0 10px; font-size: 10px; letter-spacing: .14em; color: var(--accent, #99551f); }
+	h2 { margin: 0; font: 500 28px/1.5 Georgia, 'SimSun', serif; letter-spacing: .03em; }
+	.intro-note { font-size: 12px; line-height: 1.8; color: var(--muted, #80786d); margin: 8px 0 0; }
+	.version { font-size: 10px; color: var(--muted, #80786d); padding-top: 5px; white-space: nowrap; }
+	.motion-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, 1fr); border: 1px solid var(--motion-line); border-radius: 8px 8px 0 0; overflow: hidden; background: var(--motion-surface); }
+	.motion-stage { background: var(--motion-page); padding: 22px 26px 26px; position: relative; display: flex; flex-direction: column; align-items: center; }
+	.stage-top { display: flex; justify-content: space-between; width: 100%; color: var(--motion-muted); font-size: 10px; letter-spacing: .06em; }
+	.stage-top > :first-child { color: var(--motion-accent); }
+	.stage-art { display: flex; align-items: end; justify-content: center; width: 100%; height: 315px; }
+	.motion-sprite { position: relative; display: block; aspect-ratio: 1; background-image: var(--fox-atlas); background-size: 800% 400%; background-position: 0 0; background-repeat: no-repeat; }
+	.original-pose { display: none; position: absolute; inset: 0; }
+	.motion-sprite[data-endpoint]:not([data-endpoint="none"]) { background-image: none; }
+	[data-endpoint="resting"] [data-original="resting"], [data-endpoint="sitting"] [data-original="sitting"], [data-endpoint="sleeping"] [data-original="sleeping"] { display: block; }
+	.hero-sprite { width: min(320px, 100%); flex-shrink: 0; }
+	.ground-line { height: 1px; width: 68%; background: linear-gradient(90deg, transparent, var(--motion-line), transparent); margin-top: 2px; }
+	.motion-caption { margin: 30px 0 14px; font-size: 14px; letter-spacing: .08em; }
+	.sequence-path { display: flex; justify-content: center; align-items: center; gap: 9px; font-size: 10px; color: var(--motion-muted); }
+	.sequence-path i { font-style: normal; opacity: .5; }
+	.sequence-path [aria-current="step"] { color: var(--motion-accent); }
+	.motion-controls { padding: 24px; border-left: 1px solid var(--motion-line); }
+	.control-label { margin: 0 0 14px; color: var(--motion-muted); font-size: 11px; }
+	button, select, input { font: inherit; accent-color: var(--motion-accent); }
+	button, select { color: var(--motion-ink); background: transparent; border: 1px solid var(--motion-line); border-radius: 4px; }
+	button { cursor: pointer; }
+	button:disabled, select:disabled { opacity: .45; cursor: default; }
+	button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--motion-accent); outline-offset: 3px; }
+	.clip-list { display: grid; gap: 7px; }
+	.clip-list button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 12px; }
+	.clip-list button[aria-pressed="true"] { background: var(--motion-selected); border-color: var(--motion-accent); }
+	.clip-number { color: var(--motion-accent); font-size: 11px; width: 17px; }
+	.clip-list strong { display: block; font-size: 12px; font-weight: 500; }
+	.clip-list small { display: block; font-size: 10px; color: var(--motion-muted); margin-top: 4px; line-height: 1.5; }
+	.clip-duration { margin-left: auto; font-size: 10px; color: var(--motion-muted); }
+	.settings-row { margin-top: 18px; display: flex; justify-content: space-between; align-items: end; gap: 10px; font-size: 11px; color: var(--motion-muted); }
+	.settings-row select { display: block; padding: 6px; margin-top: 7px; background: var(--motion-surface); }
+	.loop-label { display: flex; align-items: center; gap: 5px; padding-bottom: 6px; white-space: nowrap; }
+	.background-control { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--motion-muted); margin-top: 13px; }
+	.background-control select { padding: 5px; background: var(--motion-surface); }
+	.motion-notice { margin: 12px 0 0; font-size: 10px; line-height: 1.7; color: var(--motion-muted); }
+	.transport { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border: 1px solid var(--motion-line); border-top: 0; background: var(--motion-surface); border-radius: 0 0 8px 8px; }
+	.transport button { padding: 9px 14px; font-size: 11px; white-space: nowrap; }
+	.transport .play-button { background: var(--motion-accent); color: var(--motion-surface); border-color: var(--motion-accent); min-width: 70px; }
+	.timeline-label { flex: 1; display: flex; min-width: 40px; }
+	.timeline-label input { width: 100%; cursor: pointer; }
+	.transport output { font-size: 10px; white-space: nowrap; min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; color: var(--motion-muted); }
+	.frame-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 0 10px; color: var(--ink, #342f29); }
+	.frame-heading p { font-size: 11px; margin: 0; }
+	.muted { color: var(--muted, #80786d); }
+	.frame-heading button { padding: 6px 9px; font-size: 10px; background: var(--motion-surface); }
+	.frame-strip { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 7px; }
+	.frame-strip button { min-width: 0; position: relative; background: var(--motion-surface); padding: 0; overflow: hidden; }
+	.frame-strip button[aria-current="true"] { border-color: var(--motion-accent); box-shadow: inset 0 0 0 1px var(--motion-accent); }
+	.frame-sprite { width: 100%; }
+	.frame-number { position: absolute; left: 7px; top: 6px; color: var(--motion-muted); font-size: 9px; }
+	.actual-size { margin-top: 15px; color: var(--muted, #80786d); font-size: 11px; }
+	summary { cursor: pointer; padding: 6px 0; width: fit-content; }
+	.actual-stage { display: flex; align-items: end; gap: 18px; padding: 12px; background: var(--motion-page); margin-top: 10px; border-radius: 5px; }
+	.actual-sprite { width: 180px; flex-shrink: 0; }
+	.actual-stage p { padding-bottom: 20px; color: var(--motion-muted); }
+	.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+	@media (max-width: 760px) { .motion-layout { grid-template-columns: 1fr; } .motion-controls { border-left: 0; border-top: 1px solid var(--motion-line); padding: 20px; } .stage-art { height: 280px; } .hero-sprite { width: 280px; } .version { display: none; } .frame-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); } .transport { flex-wrap: wrap; padding: 14px; gap: 8px; } .timeline-label { flex-basis: calc(100% - 90px); order: 1; } .transport output { order: 2; } .frame-heading { flex-wrap: wrap; } }
+	@media (max-width: 360px) { .motion-stage { padding-left: 12px; padding-right: 12px; } .actual-stage { flex-wrap: wrap; gap: 0; } }
+</style>

@@ -1,0 +1,10 @@
+---
+import atlas from '../assets/fox/motion/fox-motion-v2.webp';
+---
+<span class="fox-transition-art" data-fox-transition aria-hidden="true" hidden style={`background-image:url("${atlas.src}")`}>
+	<img data-fox-transition-image src={atlas.src} alt="" width={atlas.width} height={atlas.height} loading="eager" decoding="async" hidden />
+</span>
+<style>
+	.fox-transition-art { position: absolute; inset: 0; display: block; background-size: 800% 400%; background-repeat: no-repeat; pointer-events: none; }
+	.fox-transition-art[hidden] { display: none; }
+</style>
