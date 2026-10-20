@@ -1,0 +1,12 @@
+Use case: precise-object-edit.
+Asset type: existing transparent fox animation sprite sheet, 1536 x 1024, six drawings in 3 columns x 2 rows.
+Input image 1 is the EDIT TARGET. It contains six sequential intermediate poses of the SAME adult fox rising from lying to sitting, read left to right, top to bottom.
+
+Correct ONLY the front legs of the TOP MIDDLE and TOP RIGHT foxes. The top middle currently has very short thick wedge-shaped black forelegs. These must become anatomically longer, slimmer, tapered forelegs, retaining the same bone lengths and slenderness as the top left and bottom left neighbors. Show the rising motion by joint rotation and progressive extension, not by shrinking or thickening the limbs.
+
+TOP MIDDLE: chest still low in its existing location. Keep the upper front legs partly folded, but extend the long narrow black lower forelegs diagonally forward toward the left. Bring the paws further forward so the elbow-to-wrist length remains consistent with the top-left lying pose. Both paws remain grounded near the existing ground level. Do not make the legs short vertical stumps. Retain natural small paws rather than oversized fists.
+TOP RIGHT: chest retains its existing halfway-raised location. Refine both front legs to the same slender taper as the bottom-left pose, with a natural elbow/wrist bend and longer visible lower legs. Paws have drawn slightly back from the corrected top-middle position, establishing a smooth intermediate angle before the bottom-left upright legs. Do not jump straight to the final seated pose.
+
+Strict invariants: Preserve the six original head positions, facial expressions, long muzzle, ears, chest heights, body and hind-leg shapes, tail positions, colors, brush textures, and overall layout. Preserve the top-left and all three bottom-row drawings unchanged. Change only the two named front-leg areas and the tiny adjoining chest edge needed for anatomical continuity. Do not change the fox's scale, style, identity or camera.
+Style: match the original sharp painted gouache fur patches, fine dark contours, orange fur, cream bib and dark brown-black socks.
+Background: genuine transparent alpha, no halo, no shadow, no checkerboard, no text, no annotation, no grid.

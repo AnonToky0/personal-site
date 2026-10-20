@@ -3,6 +3,7 @@ import FoxArtwork from './FoxArtwork.astro';
 import FoxBadge from './FoxBadge.astro';
 import ButterflyArtwork from './ButterflyArtwork.astro';
 import FoxSittingRig from './FoxSittingRig.astro';
+import FoxTransitionArtwork from './FoxTransitionArtwork.astro';
 interface Props { preview?: boolean; }
 const { preview = false } = Astro.props;
 ---
@@ -12,6 +13,7 @@ const { preview = false } = Astro.props;
 		{(['resting', 'sitting', 'sleeping'] as const).map((pose) => (
 			<span class="fox-form" data-pose={pose} aria-hidden="true">{pose === 'sitting' ? <FoxSittingRig /> : <FoxArtwork pose={pose} decorative />}</span>
 		))}
+		<FoxTransitionArtwork />
 		<span class="fox-badge" aria-hidden="true"><FoxBadge decorative /></span>
 	</button>
 	<div class="butterfly" data-butterfly hidden aria-hidden="true"><ButterflyArtwork decorative /></div>
@@ -43,12 +45,11 @@ const { preview = false } = Astro.props;
 	.fox-toggle:focus-visible { outline: 2px solid #a06636; outline-offset: 6px; }
 	.fox-form {
 		position: absolute; inset: 0; display: block; opacity: 0; pointer-events: none;
-		transform: translateY(3px) scale(.985); transform-origin: center bottom;
-		transition: opacity 240ms ease, transform 280ms ease;
 	}
 	.fox-pet[data-state="resting"] [data-pose="resting"],
 	.fox-pet[data-state="sitting"] [data-pose="sitting"],
 	.fox-pet[data-state="sleeping"] [data-pose="sleeping"] { opacity: 1; transform: none; }
+	.fox-pet[data-transition-frame="true"] .fox-form { opacity: 0; }
 	.fox-badge { position: absolute; right: 0; bottom: 0; width: 48px; height: 48px; opacity: 0; transform: scale(.9); pointer-events: none; transition: opacity 180ms ease, transform 200ms ease; }
 	.fox-pet[data-state="badge"] .fox-badge { opacity: 1; transform: none; }
 	.butterfly { position: fixed; top: 0; left: 0; width: 48px; height: 48px; pointer-events: none; z-index: 51; }

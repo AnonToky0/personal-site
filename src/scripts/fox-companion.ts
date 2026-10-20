@@ -1,6 +1,7 @@
 import { FoxBehavior, type FoxMode } from './fox-behavior';
 import { FOX_GUTTER_PADDING, isInSideGutter } from './fox-pointer';
 import { getFoxHeadAngle } from './fox-gaze';
+import { FoxTransition } from './fox-transition';
 
 const STORAGE_KEY = 'personal-site:fox-collapsed:v1';
 const MODES = new Set<FoxMode>(['auto', 'resting', 'sitting', 'sleeping', 'badge']);
@@ -20,6 +21,10 @@ class FoxCompanion extends HTMLElement {
 	private boundary!: HTMLElement;
 	private pointer = { x: 0, y: 0 };
 	private lastView = '';
+	private transition = new FoxTransition();
+	private transitionArt?: HTMLElement;
+	private transitionImage?: HTMLImageElement;
+	private transitionReady = false;
 
 	connectedCallback() {
 		if (this.events) return;
@@ -28,12 +33,17 @@ class FoxCompanion extends HTMLElement {
 		this.butterflyImage = this.butterfly.querySelector<HTMLImageElement>('img')!;
 		this.rig = this.querySelector<HTMLElement>('[data-fox-rig]') ?? undefined;
 		this.rigImages = Array.from(this.rig?.querySelectorAll<HTMLImageElement>('img') ?? []);
+		this.transitionArt = this.querySelector<HTMLElement>('[data-fox-transition]') ?? undefined;
+		this.transitionImage = this.querySelector<HTMLImageElement>('[data-fox-transition-image]') ?? undefined;
 		if (!this.toggle || !this.butterflyImage) return;
 		this.events = new AbortController();
 		this.boundary = document.querySelector<HTMLElement>('[data-fox-boundary]') ?? document.body;
 		const signal = this.events.signal;
 		const now = performance.now();
 		this.behavior = new FoxBehavior(now);
+		this.transition = new FoxTransition();
+		this.transitionReady = false;
+		this.lastView = '';
 		this.finePointer = matchMedia('(hover: hover) and (pointer: fine)');
 		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 		this.behavior.reducedMotion = reduced.matches;
@@ -117,6 +127,21 @@ class FoxCompanion extends HTMLElement {
 			image.addEventListener('load', () => this.render(), { signal });
 			image.addEventListener('error', () => this.render(), { signal });
 		}
+		const prepareTransition = async () => {
+			if (!this.transitionImage) return;
+			try {
+				await this.transitionImage.decode();
+				if (signal.aborted) return;
+				this.transitionReady = true;
+			} catch {
+				if (signal.aborted) return;
+				this.transitionReady = false;
+			}
+			this.render();
+		};
+		this.transitionImage?.addEventListener('load', prepareTransition, { signal });
+		this.transitionImage?.addEventListener('error', () => { this.transitionReady = false; this.render(); }, { signal });
+		if (this.transitionImage?.complete) void prepareTransition();
 		this.resizeObserver = new ResizeObserver(() => this.queueRender());
 		this.resizeObserver.observe(this.toggle);
 		this.resizeObserver.observe(this.boundary);
@@ -126,6 +151,7 @@ class FoxCompanion extends HTMLElement {
 	private setActive(active: boolean) {
 		this.behavior.setActive(active, performance.now());
 		window.clearInterval(this.timer);
+		if (!active && this.frame !== undefined) { cancelAnimationFrame(this.frame); this.frame = undefined; }
 		this.timer = undefined;
 		if (active) this.timer = window.setInterval(() => {
 			this.behavior.advance(performance.now());
@@ -166,8 +192,18 @@ class FoxCompanion extends HTMLElement {
 
 	private render() {
 		this.updatePointerRegion();
-		const view = this.behavior.view(performance.now());
-		this.dataset.state = view.state;
+		const now = performance.now();
+		const view = this.behavior.view(now);
+		const visual = this.transition.update(view.state, now, this.transitionReady && this.behavior.active && !this.behavior.reducedMotion);
+		this.dataset.state = visual.pose;
+		this.dataset.target = view.state;
+		this.dataset.transition = visual.clip ?? 'none';
+		this.dataset.transitionFrame = String(visual.frame !== null);
+		if (this.transitionArt) {
+			this.transitionArt.hidden = visual.frame === null;
+			if (visual.frame !== null) this.transitionArt.style.backgroundPosition = `${visual.frame % 8 / 7 * 100}% ${Math.floor(visual.frame / 8) / 3 * 100}%`;
+		}
+		if (visual.moving) this.queueRender();
 		this.dataset.mode = this.behavior.mode;
 		this.toggle.setAttribute('aria-expanded', String(view.state !== 'badge'));
 		const label = view.state === 'badge' ? '展开狐狸' : view.state === 'sleeping' ? '狐狸正在打盹，点击收起' : '收起狐狸';
@@ -186,15 +222,15 @@ class FoxCompanion extends HTMLElement {
 			const x = Math.max(26, Math.min(innerWidth - 26, this.pointer.x));
 			const y = Math.max(26, Math.min(innerHeight - 26, this.pointer.y));
 			this.butterfly.style.transform = 'translate3d(' + (x - 24) + 'px,' + (y - 24) + 'px,0) rotate(-12deg)';
-			if (rigReady && !this.behavior.reducedMotion && view.state === 'sitting') {
+			if (rigReady && !visual.moving && !this.behavior.reducedMotion && visual.pose === 'sitting') {
 				headAngle = getFoxHeadAngle({ x, y }, this.toggle.getBoundingClientRect());
 			}
 		}
 		this.style.setProperty('--fox-head-angle', headAngle.toFixed(2) + 'deg');
-		const key = view.state + ':' + butterflyMode + ':' + this.behavior.mode;
+		const key = visual.pose + ':' + butterflyMode + ':' + this.behavior.mode + ':' + visual.clip;
 		if (key !== this.lastView) {
 			this.lastView = key;
-			this.dispatchEvent(new CustomEvent('fox:state', { detail: { ...view, butterfly: butterflyMode, mode: this.behavior.mode } }));
+			this.dispatchEvent(new CustomEvent('fox:state', { detail: { ...view, state: visual.pose, target: view.state, transition: visual.clip, butterfly: butterflyMode, mode: this.behavior.mode } }));
 		}
 	}
 
