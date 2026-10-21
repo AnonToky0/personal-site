@@ -17,6 +17,7 @@ class FoxCompanion extends HTMLElement {
 	private toggle!: HTMLButtonElement;
 	private butterfly!: HTMLElement;
 	private butterflyImage!: HTMLImageElement;
+	private butterflyFlight?: HTMLElement;
 	private rig?: HTMLElement;
 	private rigImages: HTMLImageElement[] = [];
 	private finePointer!: MediaQueryList;
@@ -43,6 +44,7 @@ class FoxCompanion extends HTMLElement {
 		this.toggle = this.querySelector<HTMLButtonElement>('[data-fox-toggle]')!;
 		this.butterfly = this.querySelector<HTMLElement>('[data-butterfly]')!;
 		this.butterflyImage = this.butterfly.querySelector<HTMLImageElement>('img')!;
+		this.butterflyFlight = this.butterfly.querySelector<HTMLElement>('butterfly-flight') ?? undefined;
 		this.rig = this.querySelector<HTMLElement>('[data-fox-rig]') ?? undefined;
 		this.rigImages = Array.from(this.rig?.querySelectorAll<HTMLImageElement>('img') ?? []);
 		this.transitionArt = this.querySelector<HTMLElement>('[data-fox-transition]') ?? undefined;
@@ -245,6 +247,7 @@ class FoxCompanion extends HTMLElement {
 		this.dataset.butterfly = butterflyMode;
 		document.documentElement.classList.toggle('fox-cursor-active', butterflyMode === 'following');
 		this.butterfly.hidden = butterflyMode === 'hidden';
+		if (this.butterflyFlight) this.butterflyFlight.dataset.active = String(butterflyMode !== 'hidden');
 		const rigReady = this.rigImages.length > 0 &&
 			this.rigImages.every(image => image.complete && image.naturalWidth > 0);
 		if (this.rig) this.rig.dataset.ready = String(rigReady);
