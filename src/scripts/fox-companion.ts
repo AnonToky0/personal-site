@@ -2,6 +2,8 @@ import { FoxBehavior, type FoxMode } from './fox-behavior';
 import { FOX_GUTTER_PADDING, isInSideGutter } from './fox-pointer';
 import { getFoxHeadAngle } from './fox-gaze';
 import { FoxTransition } from './fox-transition';
+import { FoxIdle, type IdleContext, type IdleCue } from './fox-idle';
+import { FoxIdleArt } from './fox-idle-art';
 
 const STORAGE_KEY = 'personal-site:fox-collapsed:v1';
 const MODES = new Set<FoxMode>(['auto', 'resting', 'sitting', 'sleeping', 'badge']);
@@ -25,6 +27,16 @@ class FoxCompanion extends HTMLElement {
 	private transitionArt?: HTMLElement;
 	private transitionImage?: HTMLImageElement;
 	private transitionReady = false;
+	private idle = new FoxIdle();
+	private idleArt: FoxIdleArt[] = [];
+	private idleFrame?: number;
+	private lastIdlePaint = -Infinity;
+	private idleContext: IdleContext = { pose: 'resting', enabled: false, attentive: false };
+	private headTarget = 0;
+	private artworkWidth = 180;
+	private idleTime = 0;
+	private idleWallTime = 0;
+	private idleRate = 1;
 
 	connectedCallback() {
 		if (this.events) return;
@@ -35,6 +47,12 @@ class FoxCompanion extends HTMLElement {
 		this.rigImages = Array.from(this.rig?.querySelectorAll<HTMLImageElement>('img') ?? []);
 		this.transitionArt = this.querySelector<HTMLElement>('[data-fox-transition]') ?? undefined;
 		this.transitionImage = this.querySelector<HTMLImageElement>('[data-fox-transition-image]') ?? undefined;
+		this.idleArt = Array.from(this.querySelectorAll<HTMLElement>('[data-idle-art]'), element => new FoxIdleArt(element));
+		this.idle = new FoxIdle();
+		this.lastIdlePaint = -Infinity;
+		this.idleTime = 0;
+		this.idleWallTime = performance.now();
+		this.idleRate = 1;
 		if (!this.toggle || !this.butterflyImage) return;
 		this.events = new AbortController();
 		this.boundary = document.querySelector<HTMLElement>('[data-fox-boundary]') ?? document.body;
@@ -123,6 +141,16 @@ class FoxCompanion extends HTMLElement {
 			this.behavior.setMode(mode, performance.now());
 			this.render();
 		}, { signal });
+		this.addEventListener('fox:idle-preview', (event) => {
+			if (this.dataset.preview !== 'true' || !this.idleContext.enabled) return;
+			const cue = (event as CustomEvent<{ cue: IdleCue }>).detail?.cue;
+			if (!['blink', 'listen', 'tail', 'curious'].includes(cue)) return;
+			this.idle.cue(this.idleTime, cue);
+		}, { signal });
+		this.addEventListener('fox:idle-speed', (event) => {
+			if (this.dataset.preview !== 'true') return;
+			this.idleRate = (event as CustomEvent<{ slow: boolean }>).detail?.slow ? .25 : 1;
+		}, { signal });
 		for (const image of [this.butterflyImage, ...this.rigImages]) {
 			image.addEventListener('load', () => this.render(), { signal });
 			image.addEventListener('error', () => this.render(), { signal });
@@ -142,7 +170,10 @@ class FoxCompanion extends HTMLElement {
 		this.transitionImage?.addEventListener('load', prepareTransition, { signal });
 		this.transitionImage?.addEventListener('error', () => { this.transitionReady = false; this.render(); }, { signal });
 		if (this.transitionImage?.complete) void prepareTransition();
-		this.resizeObserver = new ResizeObserver(() => this.queueRender());
+		this.resizeObserver = new ResizeObserver(() => {
+			this.artworkWidth = this.toggle.getBoundingClientRect().width;
+			this.queueRender();
+		});
 		this.resizeObserver.observe(this.toggle);
 		this.resizeObserver.observe(this.boundary);
 		this.setActive(!document.hidden);
@@ -226,13 +257,50 @@ class FoxCompanion extends HTMLElement {
 				headAngle = getFoxHeadAngle({ x, y }, this.toggle.getBoundingClientRect());
 			}
 		}
-		this.style.setProperty('--fox-head-angle', headAngle.toFixed(2) + 'deg');
+		this.headTarget = headAngle;
+		this.idleContext = {
+			pose: visual.pose,
+			enabled: this.behavior.active && !this.behavior.reducedMotion && !visual.moving && visual.pose !== 'badge',
+			attentive: butterflyMode !== 'hidden' && rigReady && visual.pose === 'sitting',
+		};
+		if (this.idleContext.enabled) {
+			if (this.idleFrame === undefined) this.paintIdle(now);
+		} else {
+			if (this.idleFrame !== undefined) cancelAnimationFrame(this.idleFrame);
+			this.idleFrame = undefined;
+			this.idle.update(this.idleTime, this.idleContext);
+			this.idleWallTime = now;
+			for (const art of this.idleArt) art.hide();
+			this.dataset.idleGesture = 'quiet';
+			this.style.setProperty('--fox-head-angle', headAngle.toFixed(2) + 'deg');
+		}
 		const key = visual.pose + ':' + butterflyMode + ':' + this.behavior.mode + ':' + visual.clip;
 		if (key !== this.lastView) {
 			this.lastView = key;
 			this.dispatchEvent(new CustomEvent('fox:state', { detail: { ...view, state: visual.pose, target: view.state, transition: visual.clip, butterfly: butterflyMode, mode: this.behavior.mode } }));
 		}
 	}
+
+	private paintIdle = (now: number) => {
+		this.idleFrame = undefined;
+		if (!this.events || !this.idleContext.enabled) return;
+		this.idleTime += Math.min(100, Math.max(0, now - this.idleWallTime)) * this.idleRate;
+		this.idleWallTime = now;
+		// Only the active pose draws, capped at 30 fps. Pointer/layout reads stay
+		// in render(), not in this small animation loop.
+		if (now - this.lastIdlePaint >= 1_000 / 30) {
+			this.lastIdlePaint = now;
+			const sample = this.idle.update(this.idleTime, this.idleContext);
+			for (const art of this.idleArt) {
+				if (art.pose === this.idleContext.pose) art.draw(sample, this.artworkWidth);
+				else art.hide();
+			}
+			const angle = Math.max(-18, Math.min(22, this.headTarget * sample.gaze + sample.head));
+			this.style.setProperty('--fox-head-angle', angle.toFixed(2) + 'deg');
+			this.dataset.idleGesture = sample.blink > 0 ? 'blinking' : sample.gesture;
+		}
+		this.idleFrame = requestAnimationFrame(this.paintIdle);
+	};
 
 	disconnectedCallback() {
 		this.events?.abort();
@@ -241,6 +309,10 @@ class FoxCompanion extends HTMLElement {
 		if (this.frame !== undefined) cancelAnimationFrame(this.frame);
 		this.frame = undefined;
 		this.resizeObserver?.disconnect();
+		if (this.idleFrame !== undefined) cancelAnimationFrame(this.idleFrame);
+		this.idleFrame = undefined;
+		this.idleArt.forEach(art => art.dispose());
+		this.idleArt = [];
 		document.documentElement.classList.remove('fox-cursor-active');
 	}
 }

@@ -1,0 +1,21 @@
+---
+import { Image } from 'astro:assets';
+import sitting from '../assets/fox/fox-a-sitting-v1.png';
+import resting from '../assets/fox/fox-a-resting-v1.png';
+import sleeping from '../assets/fox/fox-a-sleeping-v1.png';
+interface Props { pose: 'resting' | 'sitting' | 'sleeping'; part?: 'body' | 'head' | 'whole'; }
+const { pose, part = 'whole' } = Astro.props;
+const source = { sitting, resting, sleeping }[pose];
+---
+<span class="idle-art" data-idle-art={pose} data-idle-part={part}>
+	<Image src={source} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" />
+	<canvas aria-hidden="true"></canvas>
+</span>
+<style>
+	.idle-art { display: block; position: absolute; inset: 0; pointer-events: none; }
+	img, canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+	img { object-fit: contain; object-position: center bottom; user-select: none; }
+	canvas { visibility: hidden; }
+	[data-rendered="true"] canvas { visibility: visible; }
+	[data-rendered="true"] img { visibility: hidden; }
+</style>

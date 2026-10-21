@@ -1,5 +1,5 @@
 ---
-import FoxArtwork from './FoxArtwork.astro';
+import FoxIdleArtwork from './FoxIdleArtwork.astro';
 import FoxBadge from './FoxBadge.astro';
 import ButterflyArtwork from './ButterflyArtwork.astro';
 import FoxSittingRig from './FoxSittingRig.astro';
@@ -11,7 +11,7 @@ const { preview = false } = Astro.props;
 <fox-companion class="fox-pet" id={preview ? 'corner-preview' : undefined} data-preview={String(preview)} data-persist="true" data-state="resting" data-mode="auto" data-butterfly="hidden">
 	<button class="fox-toggle" data-fox-toggle type="button" disabled aria-label="收起狐狸" aria-expanded="true" title="点击收起狐狸">
 		{(['resting', 'sitting', 'sleeping'] as const).map((pose) => (
-			<span class="fox-form" data-pose={pose} aria-hidden="true">{pose === 'sitting' ? <FoxSittingRig /> : <FoxArtwork pose={pose} decorative />}</span>
+			<span class="fox-form" data-pose={pose} aria-hidden="true">{pose === 'sitting' ? <FoxSittingRig idle /> : <FoxIdleArtwork pose={pose} />}</span>
 		))}
 		<FoxTransitionArtwork />
 		<span class="fox-badge" aria-hidden="true"><FoxBadge decorative /></span>
