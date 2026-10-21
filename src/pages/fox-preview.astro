@@ -50,7 +50,7 @@ const poses = [
 				))}
 			</section>
 
-			<section class="review-panel" aria-labelledby="preview-title">
+			<section class="review-panel" id="idle-preview" aria-labelledby="preview-title">
 				<div class="review-heading">
 					<p class="eyebrow">ON THE PAGE</p>
 					<h2 id="preview-title">让它待在右下角。</h2>
@@ -58,6 +58,7 @@ const poses = [
 					<p class="interaction-note">菜单栏两侧各留出 24 px 的缓冲，返回中间区域恢复普通光标。<br />窗口较窄时关闭两侧互动；开启系统“减少动态效果”时，狐狸保持静止。</p>
 					<p class="interaction-note">点击狐狸可收起，再点圆标展开。<br />90 秒没有操作，它会安心打盹。</p>
 					<p class="interaction-note">切换姿态可看坐起、趴下、入睡和苏醒。<br />坐姿与睡姿之间，会先经过趴卧。</p>
+					<p class="interaction-note">安静时会偶尔眨眼、动动一只耳朵，轻摆尾尖。<br />蝴蝶停留时，先侧耳，再歪头看一会儿。睡着后只留下慢呼吸。</p>
 				</div>
 				<div class="controls">
 					<fieldset>
@@ -85,6 +86,16 @@ const poses = [
 						</div>
 					</fieldset>
 					<output id="preview-status" aria-live="off">自动陪伴 · 放松趴卧 · 180 px</output>
+					<div class="idle-review">
+						<p>看看它的小动作 <span>动作在右下角播放</span></p>
+						<div class="idle-buttons">
+							{[{ cue: 'blink', label: '眨一下眼' }, { cue: 'listen', label: '侧耳听听' }, { cue: 'tail', label: '轻摆尾尖' }, { cue: 'curious', label: '好奇地看一会儿' }].map(({ cue, label }) => (
+								<button type="button" data-idle-cue={cue}>{label}</button>
+							))}
+						</div>
+						<p class="idle-hint">可在趴卧、坐姿下试试；选“蜷卧打盹”观察更慢的呼吸。</p>
+						<label class="idle-slow"><input type="checkbox" id="idle-slow" /> 慢放观察（¼ 速度）</label>
+					</div>
 				</div>
 			</section>
 
@@ -120,6 +131,7 @@ const poses = [
 	const sizeControl = document.querySelector<HTMLFieldSetElement>('#size-control');
 	const poseLabels: Record<string, string> = { resting: '放松趴卧', sitting: '抬头坐姿', sleeping: '蜷卧打盹', badge: '圆形图标' };
 	const transitionLabels: Record<string, string> = { rise: '正在坐起', lie: '正在趴下', sleep: '慢慢入睡', wake: '正在醒来' };
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 	function updateStatus() {
 		const state = preview?.dataset.state ?? 'resting';
 		const mode = preview?.dataset.mode ?? 'auto';
@@ -129,6 +141,8 @@ const poses = [
 		const visitor = butterfly === 'following' ? ' · 蝴蝶跟随指针' : '';
 		const poseLabel = transitionLabels[preview?.dataset.transition ?? 'none'] ?? poseLabels[state];
 		if (status) status.textContent = (mode === 'auto' ? '自动陪伴' : '姿态预览') + ' · ' + poseLabel + ' · ' + width + ' px' + visitor;
+		const unavailable = state === 'badge' || state === 'sleeping' || preview?.dataset.transition !== 'none' || reducedMotion.matches;
+		document.querySelectorAll<HTMLButtonElement>('[data-idle-cue]').forEach(button => { button.disabled = unavailable; });
 	}
 	function updatePreview() {
 		const pose = document.querySelector<HTMLInputElement>('input[name="pose"]:checked')?.value ?? 'auto';
@@ -141,6 +155,13 @@ const poses = [
 	}
 	document.querySelectorAll<HTMLInputElement>('input[type="radio"]').forEach((input) => input.addEventListener('change', updatePreview));
 	preview?.addEventListener('fox:state', updateStatus);
+	reducedMotion.addEventListener('change', updateStatus);
+	document.querySelectorAll<HTMLButtonElement>('[data-idle-cue]').forEach(button => button.addEventListener('click', () => {
+		preview?.dispatchEvent(new CustomEvent('fox:idle-preview', { detail: { cue: button.dataset.idleCue } }));
+	}));
+	document.querySelector<HTMLInputElement>('#idle-slow')?.addEventListener('change', event => {
+		preview?.dispatchEvent(new CustomEvent('fox:idle-speed', { detail: { slow: (event.target as HTMLInputElement).checked } }));
+	});
 	preview?.addEventListener('fox:mode', () => {
 		const automatic = document.querySelector<HTMLInputElement>('input[name="pose"][value="auto"]');
 		if (automatic) automatic.checked = true;
@@ -197,6 +218,17 @@ const poses = [
 	fieldset:disabled { opacity: .4; }
 	fieldset:disabled label { cursor: default; }
 	output { display: block; margin-left: 82px; font-size: 11px; color: var(--accent); line-height: 1.8; }
+	.idle-review { margin: 20px 0 0 82px; padding-top: 16px; border-top: 1px solid var(--line); }
+	.idle-review p { font-size: 12px; margin: 0 0 10px; }
+	.idle-review p span, .idle-review .idle-hint { color: var(--muted); font-size: 11px; line-height: 1.8; }
+	.idle-review p span { margin-left: 8px; }
+	.idle-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+	.idle-buttons button { font: inherit; font-size: 11px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: var(--surface); cursor: pointer; }
+	.idle-buttons button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+	.idle-buttons button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+	.idle-buttons button:disabled { opacity: .4; cursor: default; }
+	.idle-slow { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); cursor: pointer; }
+	.idle-slow input { accent-color: var(--accent); }
 	.badge-note { display: flex; align-items: center; gap: 18px; margin-top: 26px; }
 	.badge-sample { width: 48px; height: 48px; flex-shrink: 0; }
 	.badge-note h2 { font-size: 13px; margin-bottom: 5px; }
@@ -228,5 +260,6 @@ const poses = [
 		fieldset { grid-template-columns: 1fr; }
 		legend { line-height: 24px; }
 		output { margin-left: 0; }
+		.idle-review { margin-left: 0; }
 	}
 </style>
