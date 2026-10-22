@@ -1,289 +1,167 @@
 ---
-title: "git 基础"
-description: "介绍 git 的基础知识和常用指令"
+title: "工作区、暂存区与提交：Git 保存了什么"
+description: "建立工作区、Index 和 HEAD 的三层模型，理解 Add、Commit、Push 的区别，以及一次清晰提交的形成过程。"
 date: 2026-10-12
-tags: [git]
+tags: ["Git", "基础模型"]
 ---
 
+写好文件之后执行了 `git add`，这份内容就已经永久保存了吗？再执行 `git commit`，它是不是就到 GitHub 或 GitLab 了？
 
-## 1. Git 与 GitLab 简介
+回答这些问题，需要先分清 Git 管理的几种状态。
 
-### 1.1 Git 是什么
+## 1. Git 与托管平台
 
-Git 是一个**分布式版本控制系统**，主要用于记录文件变化、管理代码版本以及支持多人协作开发。
+Git 是分布式版本控制工具。一个普通本地仓库拥有自己的对象数据库和历史，在没有网络连接、没有托管平台的情况下，也能提交和查看历史。
 
-Git 的核心能力包括：
+GitHub、GitLab 等平台提供远程仓库托管、代码审查、Issues 和 CI/CD。GitLab 的 Merge Request（MR）和 GitHub 的 Pull Request（PR）都是平台提供的协作机制，并不是 `git commit` 的另一种名称。
 
-- **版本管理**：记录每次提交的代码状态，方便查看历史和回溯。
-- **分支管理**：创建独立分支，使不同功能的开发互不干扰。
-- **变更比较**：查看文件在不同版本之间的差异。
-- **代码合并**：将不同分支中的修改整合到一起。
-- **远程协作**：通过 Push、Fetch、Pull 等操作与远程仓库交换代码。
+| 对象 | 含义 |
+| --- | --- |
+| Repository | 仓库，保存 Git 对象、引用和配置等信息 |
+| Working Tree | 工作区，编辑器实际读写的文件 |
+| Index / Staging Area | 暂存区，准备写入下一次提交的内容 |
+| Commit | 项目快照及其父提交、作者、说明等元数据 |
+| Branch | 指向提交的可移动引用 |
+| HEAD | 当前检出位置，通常通过当前分支指向提交 |
 
-Git 不依赖 GitLab 也可以使用。例如，在本地执行 `git init` 后，就可以进行版本管理。
+## 2. 三层状态模型
 
-### 1.2 GitLab 是什么
+先以一个已有提交的普通仓库为例：
 
-GitLab 是基于 Git 的代码托管与协作开发平台。
+```text
+HEAD 中的快照       暂存区 Index          工作区文件
+     A                  A                   A
+                        ^                   |
+                        +----- git add -----+
+```
 
-Git 负责底层版本控制，GitLab 则提供图形化管理和团队协作功能。
+`git add` 把选中文件当前的内容更新到暂存区。之后继续编辑文件，暂存区不会自动跟着变化。
 
-| 功能 | 说明 |
-|---|---|
-| Repository | 托管 Git 仓库，浏览文件及提交历史 |
-| Branches | 查看和管理远程分支 |
-| Merge Request（MR） | 请求将一个分支的修改合并到另一个分支 |
-| Code Review | 审查代码、发表评论和提出修改意见 |
-| Issues | 管理缺陷、需求和开发任务 |
-| CI/CD | 自动执行构建、测试、部署等流程 |
-| Members | 管理项目成员及访问权限 |
+| 操作 | HEAD | Index | 工作区 |
+| --- | --- | --- | --- |
+| 初始状态 | A | A | A |
+| 修改文件 | A | A | B |
+| 第一次 Add | A | B | B |
+| 再次修改 | A | B | C |
+| 此时 Commit | B | B | C |
+| 再次 Add 并 Commit | C | C | C |
 
-**两者的关系：Git 负责代码版本管理，GitLab 负责代码托管和团队协作。**
+因此，一个文件可以同时出现在 Status 的“已暂存”和“未暂存”区域：暂存区与 HEAD 不同，工作区与暂存区也不同。
 
-### 1.3 常见术语
+重复 Add 只是重新更新暂存区，一般不会产生需要解决的合并冲突。冲突通常发生在 Merge、Rebase、Cherry-pick、Stash 恢复等整合修改的操作中。
 
-| 术语 | 说明 |
-|---|---|
-| Repository（仓库） | 存储项目文件与 Git 历史记录 |
-| Working Tree（工作区） | 当前本地目录中的实际文件 |
-| Staging Area（暂存区） | 准备纳入下一次提交的修改 |
-| Commit（提交） | 一次保存到 Git 历史中的项目快照 |
-| Branch（分支） | 指向某个 Commit 的可移动引用 |
-| HEAD | 表示当前检出的提交位置，通常指向当前分支 |
-| Remote（远程） | 远程仓库的命名配置，例如 `origin` |
-| Upstream（上游分支） | 本地分支配置的默认跟踪分支 |
-| Merge（合并） | 整合不同分支的开发结果 |
-| Merge Request（MR） | GitLab 中请求审查并合并代码的机制 |
-| Tag（标签） | 指向特定提交的标记，常用于版本或里程碑 |
+## 3. 一次本地提交
 
----
+在仓库根目录，假设正在修改 `lesson.txt`：
 
-## 2. Git 基本工作流程
+```powershell
+git status
+git diff -- lesson.txt
+git add -- lesson.txt
+git diff --cached
+git commit -m "docs: 补充练习说明"
+git status
+```
 
-### 2.1 本地修改与提交
+这里的 `--` 用于分隔选项与路径。含空格的路径要加引号，例如 `git add -- 'notes/git lesson.md'`。
 
-日常开发通常涉及三个区域：
+Commit 保存的是暂存区快照，不会默认把所有工作区文件都保存进去。新文件需要 Add；未 Add 的后续修改也不会进入这次普通提交。
 
-**工作区 → 暂存区 → 本地仓库**
+`git add .` 处理当前目录及其子目录，`git add -A` 默认处理整个工作区中的新增、修改和删除。提交前逐个检查差异，比直接习惯性 Add 全部内容更容易避免夹带临时文件。
 
-1. 在工作区修改代码。
-2. 使用 `git add` 将修改加入暂存区。
-3. 使用 `git commit` 将暂存区内容保存为一个新的 Commit。
-4. 使用 `git push` 将本地 Commit 推送到远程仓库。
+## 4. Commit 记录了什么
 
-注意：
+Commit 关联一个表示项目快照的 Tree，并包含父提交、作者、提交者、时间和提交说明。普通提交通常有一个父提交，合并提交可以有多个，最初的根提交没有父提交。
 
-- `git add` 不会创建 Commit。
-- `git commit` 默认不会将代码上传到 GitLab。
-- `git push` 负责将本地提交上传到远程分支。
-- `git push` 不等于合并分支，合并通常通过 MR 完成。
+```powershell
+git show --stat HEAD
+git rev-parse HEAD
+git cat-file -p HEAD
+```
 
-### 2.2 本地与远程分支的关系
+短哈希是完整对象 ID 的缩写。它不是递增序号，也不固定只能显示七位。改写提交说明、父提交等信息，也会改变对象 ID。
 
-以 `mmi-main` 为例：
+分支移动到新提交后，旧提交仍作为祖先保留在历史中；不是把旧版本覆盖掉。
 
-| 对象 | 示例 | 说明 |
-|---|---|---|
-| 本地仓库 | `D:\repos\mmi\mmi-main` | 本机的 Git 仓库 |
-| 远程仓库别名 | `origin` | 本地配置的远程仓库名称 |
-| 远程仓库地址 | `git@10.1.11.134:tech-platform/common/ui/mmi/mmi-main.git` | GitLab 仓库 SSH 地址 |
-| 本地分支 | `feature/XXX` | 在本机开发的分支 |
-| 远程跟踪分支 | `origin/feature/XXX` | 本地保存的远程分支状态记录 |
-| GitLab 上的实际分支 | `feature/XXX` | GitLab 服务器上的分支 |
+## 5. Add、Commit、Push 各自完成哪一步
 
-其中 `origin` 并不是 Git 的固定关键字，而是远程仓库的常用默认名称。
+| 操作 | 改变什么 | 是否需要远程连接 |
+| --- | --- | --- |
+| `git add` | 更新 Index | 否 |
+| `git commit` | 创建本地提交，并推进当前分支 | 否 |
+| `git push` | 发送所需对象并请求更新远程引用 | 是 |
 
-例如：
+Push 不会上传尚未提交的工作区修改，也不等于把功能分支合并到主分支。关于远程和上游，见 [远程分支、上游与同步](/notes/git/04-remotes-and-sync/)。
 
-`git push -u origin feature/XXX`
+`nothing to commit, working tree clean` 表示工作区和暂存区没有待提交的普通文件变化，不证明当前提交已经推送。被忽略文件通常也不会显示在普通 Status 中。
 
-这条命令的作用是：
+## 6. 提交身份与提交说明
 
-1. 查找本地配置的远程仓库 `origin`。
-2. 将本地 `feature/XXX` 分支推送到该仓库。
-3. 如果远程同名分支不存在，创建该分支。
-4. 使用 `-u` 为本地分支设置对应的上游分支。
+在新仓库第一次提交前，可以检查身份配置：
 
-它不会自动把代码合并到远程主分支如`develop`。
+```powershell
+git config --get user.name
+git config --get user.email
+git config --show-origin --get user.email
+```
 
----
+为当前仓库设置身份：
 
-## 3. GitLab Merge Request 工作流程
+```powershell
+git config --local user.name "Your Name"
+git config --local user.email "you@example.com"
+```
 
-### 3.1 标准开发流程
+`--global` 设置用户级配置；`--local` 设置当前仓库配置。提交身份不同于远程平台登录凭据，配置邮箱不会自动获得仓库访问权限。
 
-团队日常开发通常采用 Feature Branch + Merge Request 模式。
+说明可以采用 `type: 简短描述`，这是项目约定，不是 Git 的强制语法。
 
-**第一步：同步开发基线**
+| 类型 | 示例 |
+| --- | --- |
+| `feat` | `feat: 支持导入用户配置` |
+| `fix` | `fix: 修复导入配置的校验逻辑` |
+| `docs` | `docs: 整理 Git 学习笔记` |
+| `refactor` | `refactor: 提取配置解析逻辑` |
+| `test` | `test: 覆盖空配置输入` |
+| `chore` / `build` / `ci` | 维护、构建或自动化配置 |
 
-| 操作 | 命令 |
-|---|---|
-| 检查状态 | `git status` |
-| 切换公共分支 | `git switch develop` |
-| 获取远程更新 | `git fetch origin` |
-| 更新本地分支 | `git pull --ff-only` |
+一次提交应表达一项能说明清楚的变化。文件少不一定适合合并成一项提交，文件多也不一定要按文件拆开。
 
-**第二步：创建功能分支**
+## 7. 修改最近一次提交说明
 
-`git switch -c feature/XXX`
+最近一次提交尚未共享，只想修改说明时，先检查暂存区：
 
-**第三步：开发并提交**
+```powershell
+git status
+git diff --cached
+git commit --amend -m "docs: 完善安装说明"
+git log -1 --oneline
+```
 
-| 操作 | 命令 |
-|---|---|
-| 检查修改 | `git diff` |
-| 暂存修改 | `git add 文件名` |
-| 检查暂存内容 | `git diff --cached` |
-| 创建提交 | `git commit -m "feat: xxx"` |
+普通 `--amend` 会把当前 Index 用于替代提交。如果已暂存其他修改，它们也可能被纳入，不能把这条命令理解成只改文字。
 
-**第四步：首次推送到 GitLab**
+明确只改说明、忽略现有暂存内容时，可以使用：
 
-`git push -u origin feature/XXX`
+```powershell
+git commit --amend --only -m "docs: 完善安装说明"
+```
 
-执行成功后，在 GitLab 对应项目中创建 MR：
+它创建替代当前 HEAD 的提交，而不是原地修改旧对象；说明变化会改变提交 ID。已经共享的提交涉及历史改写，见 [Rebase 与推送检查](/notes/git/07-rebase-and-merge-strategies/)。修改更早的说明通常需要交互式 Rebase，应另行理解后操作。[Git Commit 官方文档](https://git-scm.com/docs/git-commit)
 
-- Source branch：`feature/XXX`
-- Target branch：`develop`
+## 实践与完成标准
 
-**第五步：Review 与修改**
+在练习仓库中，先把 `lesson.txt` 改成 B 并 Add，再改成 C。分别执行 `git diff` 和 `git diff --cached`，预测 Commit 后哪份内容会被保存，再用 `git show HEAD:lesson.txt` 检查。
 
-如果审查者要求修改代码：
+完成后应能解释：为什么 Commit 后 Status 仍可能显示该文件有修改？
 
-1. 在原分支上继续修改。
-2. 创建新的 Commit。
-3. 执行 `git push`。
-4. 新提交会自动出现在原 MR 中。
-5. 在对应评论中回复已修改，等待确认。
+## 思考题
 
-**不需要重新创建 MR。**
+1. Add 之后编辑器自动格式化了文件，需要再 Add 吗？
+2. 工作区干净，为什么仍可能有三个提交没有推送？
+3. 同一个文件出现在两组修改中，是否说明 Git 出错？
+4. `user.email` 与 GitHub / GitLab 的认证分别解决什么问题？
 
-**第六步：合并后同步**
+## 系列导航
 
-MR 被合并后，GitLab 上的 `develop` 已经更新，但本地 `develop` 不会自动移动。
-
-执行：
-
-1. `git switch develop`
-2. `git fetch origin`
-3. `git pull --ff-only`
-
-将本地分支同步到最新状态。
-
-### 3.2 GitLab 评论与审查操作
-
-| 操作 | 用途 | 常见使用场景 |
-|---|---|---|
-| Add comment now | 立即发布评论 | 回复审查者，说明修改情况 |
-| Start a review | 开始批量审查，暂存评论供稍后统一发布 | 审查多个文件 |
-| Reply | 回复已有评论 | 解释代码或者反馈修改结果 |
-| Resolve thread | 将讨论标记为已解决 | 问题已经处理完成 |
-| Reopen thread | 重新打开已解决讨论 | 发现仍有问题 |
-| Approve | 表示认可当前 MR | 审查通过 |
-| Merge | 将源分支合并进目标分支 | 完成 MR |
-| Emoji reaction | 使用表情回应评论 | 简单反馈 |
-
-<!-- 建议采用的协作习惯：
-
-开发者修改并 Push 后，先通过 `Reply` 说明修改内容；由审查者确认并 `Resolve thread`。如果团队另有约定，也可以由开发者自行 Resolve。 -->
-
-### 3.3 Merge Commit
-
-使用 Merge Commit 策略时，GitLab 会保留功能分支的提交历史，并创建合并提交。
-
-需要区分：
-
-- **Commit**：保存某次修改。
-- **Push**：将本地提交推送到远程。
-- **MR**：提出代码合并请求。
-- **Merge**：真正整合分支历史。
-
-一个 MR 可以包含多个 Commit，也可以经过多次 Push。
-
----
-
-## 5. Commit Message 规范
-
-建议使用简化的 Conventional Commits 风格：
-
-`type: 简短描述`
-
-| 类型 | 适用场景 | 示例 |
-|---|---|---|
-| `feat` | 新功能 | `feat: 增加实时采集接口` |
-| `fix` | 缺陷修复 | `fix: 修复采集状态异常` |
-| `refactor` | 不改变外部行为的代码重构 | `refactor: 优化采集模块结构` |
-| `docs` | 文档修改 | `docs: 更新部署说明` |
-| `test` | 测试代码 | `test: 增加数据解析测试` |
-| `chore` | 工程配置及日常维护 | `chore: 添加文件忽略规则` |
-| `perf` | 性能优化 | `perf: 减少数据处理开销` |
-| `build` | 构建系统或依赖变更 | `build: 更新项目依赖` |
-| `ci` | CI/CD 配置变更 | `ci: 添加自动构建任务` |
-
-其中 `type` 后使用英文冒号和空格。
-
-日常团队开发可以采用中文描述，只要保持清晰一致即可。
-
----
-
-## 6. Visual Studio 中使用 Git
-
-Visual Studio 2022 已经内置了较完整的 Git 工具，大多数日常操作不需要安装插件。
-
-| 功能入口 | 用途 | 对应 Git 操作 |
-|---|---|---|
-| View → Git Changes | 查看修改、暂存、提交、推送 | `status`、`diff`、`add`、`commit`、`push` |
-| View → Git Repository | 查看分支、提交历史及关系图 | `branch`、`log` |
-| Diff Viewer | 对比文件修改前后内容 | `git diff` |
-| Git Blame | 查看代码行对应的历史提交 | `git blame` |
-| 底部状态栏分支入口 | 查看或切换当前分支 | `git switch` |
-
-建议的使用方式：
-
-- 日常开发：使用 **Git Changes** 检查文件修改。
-- 查看历史：使用 **Git Repository** 的提交图。
-- 提交代码：先查看 Diff，再暂存和提交。
-- 理解 Git：同时对照命令行与 Visual Studio 图形界面。
-
-对于需要在编辑器边缘实时标记修改行的场景，可以考虑 Visual Studio 2022 扩展 **Git Diff Margin**。
-
----
-
-## 7. 常见问题与注意事项
-
-| 问题 | 解释或建议 |
-|---|---|
-| Push 后代码是否进入 `develop`？ | 否。通常只是更新远程功能分支，仍需通过 MR 合并。 |
-| 每次 Push 都要重新创建 MR 吗？ | 不需要。同一源分支的新提交会自动更新到原 MR。 |
-| 一个 MR 可以有多个 Commit 吗？ | 可以。Commit 数量与 MR 数量没有一一对应关系。 |
-| 为什么本地 `develop` 比 GitLab 落后？ | GitLab 合并 MR 不会自动更新本地分支，需要主动同步。 |
-| `origin` 是远程仓库地址吗？ | 不是地址本身，而是远程仓库的本地别名。 |
-| `origin/develop` 是服务器上的真实分支吗？ | 不是，它是本地维护的远程跟踪引用。 |
-| `git fetch` 会修改当前代码吗？ | 不会自动将远程变更合并到当前工作分支。 |
-| `git pull` 与 `git fetch` 一样吗？ | 不一样。Pull 会进一步尝试整合远程更新。 |
-| 没有 `git switch` 怎么办？ | 使用 `git checkout`，或将 Git 升级到 2.23 及以上。 |
-| `.gitignore` 为什么不生效？ | 可能因为文件已被 Git 跟踪，需要先取消跟踪。 |
-| 两个人 Git 版本不同可以协作吗？ | 通常可以，但应注意旧版本支持的命令和仓库功能。 |
-| 为什么 `git log --oneline` 只有 7 位哈希？ | 显示的是可用于识别对象的缩短前缀，而不是完整哈希。 |
-
-
----
-
-## 8. 后续计划补充的内容
-
-以下内容暂不展开，遇到实际场景后再逐步补充：
-
-- [ ] Git 工作区、暂存区、Commit 的内部原理
-- [ ] Git 分支、HEAD 与提交关系图详解
-- [ ] Merge、Rebase、Squash 的区别
-- [ ] Git 冲突产生的原因与解决流程
-- [ ] Reset、Restore、Revert 的区别及风险
-- [ ] Cherry-pick 与跨分支提交管理
-- [ ] Stash：临时保存未完成的修改
-- [ ] Reflog：误操作后的历史恢复
-- [ ] Git Tag 与版本发布
-- [ ] GitLab 分支保护、成员权限与审批规则
-- [ ] 多仓库协作与依赖版本管理
-- [ ] GitLab CI/CD 基础
-- [ ] 常见 Git 报错与排查案例
-
----
+- [学习路线与完整目录](/notes/git/00-learning-roadmap/)
+- [下一章：Diff、文件跟踪与换行符](/notes/git/02-diff-and-files/)
