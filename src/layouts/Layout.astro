@@ -8,7 +8,7 @@ interface Props {
 	notes?: boolean;
 }
 
-const { title = 'Astro Basics', description, notes = false } = Astro.props;
+const { title = 'It works for me.', description, notes = false } = Astro.props;
 ---
 
 <!doctype html>
@@ -16,8 +16,8 @@ const { title = 'Astro Basics', description, notes = false } = Astro.props;
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/butterfly-32.png" />
+		<link rel="icon" type="image/png" sizes="192x192" href="/butterfly-192.png" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		{description && <meta name="description" content={description} />}
