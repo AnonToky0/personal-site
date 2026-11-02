@@ -1,0 +1,51 @@
+---
+import FoxSittingRig from './FoxSittingRig.astro';
+import ButterflyArtwork from './ButterflyArtwork.astro';
+---
+<section id="head-turn-preview" aria-labelledby="head-turn-title">
+	<p class="eyebrow">A QUIET GLANCE · 轻轻留意</p>
+	<h2 id="head-turn-title">看一眼，也可以不追着看。</h2>
+	<p class="note">保留原来的侧脸和身形，只轻轻抬头、低头。<br />蝴蝶飞到身后，就放松回正，等它再飞回来。</p>
+	<fox-gaze-preview>
+		<div class="stage">
+			<div class="fox" role="img" aria-label="保持原侧脸的狐狸，轻轻观察蝴蝶">
+				<FoxSittingRig />
+				<span class="visitor" data-gaze-butterfly hidden aria-hidden="true"><ButterflyArtwork motion="preview" /></span>
+			</div>
+		</div>
+		<div class="controls">
+			<div class="targets" aria-label="蝴蝶的位置">
+				<button type="button" data-gaze-target="up">蝴蝶在左上方</button>
+				<button type="button" data-gaze-target="down">蝴蝶在左下方</button>
+				<button type="button" data-gaze-target="behind">蝴蝶飞到身后</button>
+				<button type="button" data-gaze-target="rest">放松回正</button>
+			</div>
+			<div class="targets" aria-label="小动作">
+				<button type="button" data-gaze-cue="blink">眨一下眼</button>
+				<button type="button" data-gaze-cue="listen">侧耳听听</button>
+			</div>
+			<output aria-live="polite">保持原来的侧脸，放松一会儿</output>
+			<p class="note">这里和右下角使用同一套侧脸动作。</p>
+		</div>
+	</fox-gaze-preview>
+</section>
+<script>
+	import '../scripts/fox-head-turn-preview';
+</script>
+<style>
+	section { padding: 32px 0; border-bottom: 1px solid var(--line); }
+	.eyebrow { color: var(--accent); font-size: 11px; letter-spacing: .12em; margin: 0 0 12px; }
+	h2 { font-size: 21px; font-weight: 500; margin: 0 0 12px; }
+	.note { color: var(--muted); font-size: 12px; line-height: 1.8; margin: 0; }
+	fox-gaze-preview { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 24px; margin-top: 20px; }
+	.stage { padding: 20px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; }
+	.fox { position: relative; width: min(280px, 100%); aspect-ratio: 1; margin: auto; }
+	.visitor { position: absolute; width: 38px; height: 38px; transform: translate(-50%, -50%); pointer-events: none; }
+	[hidden] { display: none !important; }
+	.targets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+	button { padding: 10px 15px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 12px; cursor: pointer; }
+	button:hover { border-color: var(--accent); }
+	button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+	output { display: block; color: var(--accent); font-size: 12px; line-height: 1.8; margin-bottom: 10px; }
+	@media (max-width: 760px) { fox-gaze-preview { grid-template-columns: 1fr; } }
+</style>
