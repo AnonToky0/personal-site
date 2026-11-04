@@ -1,0 +1,13 @@
+Use case: identity-preserve / precise-object-edit. Create a production 3 by 3 sprite atlas of NINE COMPLETE SEATED FOX POSES, on genuine transparent alpha. Image 1 supplies the successful THREE KEY POSES and continuous neck-to-chest anatomy. Image 2 is the original fox and exact body placement/scale reference. Preserve the watercolor/gouache brushwork, orange coat, cream bib, slender adult proportions, long dark forelegs, and friendly narrow eyes. CRITICAL: render the ENTIRE fox in every cell, not isolated heads. Exactly nine equal SQUARE cells in a square canvas, no lines/text/borders. Each sprite fully inside its own cell. All figures identical scale, paw coordinates and tail/hip coordinates, like onion-skin registered animation. Do NOT center each silhouette independently.
+Motion is a restrained turn of HEAD + NECK + SHOULDERS + UPPER CHEST TOGETHER, supported by planted paws and fixed pelvis. Nose and eyes lead gently; cervical fur curves into the chest, shoulders follow. No floating head and no pasted-on neck. Maintain a short, continuous neck and an unbroken white throat/bib; upper chest rotation tapers to zero by the elbows. Both front paws, lower forelegs, haunch and tail stay the same as the original; never mirror the whole fox. Entire body still faces three-quarter left with haunch to the right, only the shoulder girdle modestly twists. Same leg length/width in every frame. Keep the shoulder axis at x=0.38,y=0.42 of every cell, ears around y=0.02, visible eye height around y=0.18, front paw tips at x=0.20 and x=0.28,y=0.93, lowest tail at y=0.98, tail mass at x=0.70,y=0.85. Use image 2 framing in EVERY cell.
+Row-major nine distinct progressive orientations:
+1 original leftward pose, head -70 degrees from frontal.
+2 -55 degrees, shoulder starts following.
+3 -40 degrees, far eye becoming visible, throat turns with head.
+4 -20 degrees, nearly front, shoulder and white chest broaden naturally.
+5 0 degrees frontal face with connected frontal upper chest, like image1 center.
+6 +12 degrees right, very slight turn from front.
+7 +24 degrees right three-quarter.
+8 +34 degrees right three-quarter.
+9 +42 degrees right three-quarter, both eyes still visible, like image1 right. NOT full right profile or extreme backwards neck twist.
+Every single pose must look anatomically credible as a standalone illustration. Retain one consistent identity and proportions, no head scale change, no jumping neck position, no crouching/standing, no stepping. Lower half must remain visually locked. Give the ear tips and paws small transparent margins without altering their relative coordinates. No scene, butterflies, shadow, white background, labels or watermark.

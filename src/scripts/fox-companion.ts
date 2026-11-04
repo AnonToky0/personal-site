@@ -1,6 +1,6 @@
 import { FoxBehavior, type FoxMode } from './fox-behavior';
 import { FOX_GUTTER_PADDING, isInSideGutter } from './fox-pointer';
-import { getFoxHeadAngle } from './fox-gaze';
+import { getFoxHeadAngle, getFoxAttentionWeight } from './fox-gaze';
 import { FoxTransition } from './fox-transition';
 import { FoxIdle, type IdleContext, type IdleCue } from './fox-idle';
 import { FoxIdleArt } from './fox-idle-art';
@@ -34,6 +34,7 @@ class FoxCompanion extends HTMLElement {
 	private lastIdlePaint = -Infinity;
 	private idleContext: IdleContext = { pose: 'resting', enabled: false, attentive: false };
 	private headTarget = 0;
+	private headAngle = 0;
 	private artworkWidth = 180;
 	private idleTime = 0;
 	private idleWallTime = 0;
@@ -47,6 +48,7 @@ class FoxCompanion extends HTMLElement {
 		this.butterflyFlight = this.butterfly.querySelector<HTMLElement>('butterfly-flight') ?? undefined;
 		this.rig = this.querySelector<HTMLElement>('[data-fox-rig]') ?? undefined;
 		this.rigImages = Array.from(this.rig?.querySelectorAll<HTMLImageElement>('img') ?? []);
+		this.headAngle = 0;
 		this.transitionArt = this.querySelector<HTMLElement>('[data-fox-transition]') ?? undefined;
 		this.transitionImage = this.querySelector<HTMLImageElement>('[data-fox-transition-image]') ?? undefined;
 		this.idleArt = Array.from(this.querySelectorAll<HTMLElement>('[data-idle-art]'), element => new FoxIdleArt(element));
@@ -252,30 +254,33 @@ class FoxCompanion extends HTMLElement {
 			this.rigImages.every(image => image.complete && image.naturalWidth > 0);
 		if (this.rig) this.rig.dataset.ready = String(rigReady);
 		let headAngle = 0;
+		let inSight = false;
 		if (butterflyMode !== 'hidden') {
 			const x = Math.max(26, Math.min(innerWidth - 26, this.pointer.x));
 			const y = Math.max(26, Math.min(innerHeight - 26, this.pointer.y));
 			this.butterfly.style.transform = 'translate3d(' + (x - 24) + 'px,' + (y - 24) + 'px,0) rotate(-12deg)';
 			if (rigReady && !visual.moving && !this.behavior.reducedMotion && visual.pose === 'sitting') {
-				headAngle = getFoxHeadAngle({ x, y }, this.toggle.getBoundingClientRect());
+				const bounds = this.toggle.getBoundingClientRect();
+				headAngle = getFoxHeadAngle({ x, y }, bounds);
+				inSight = getFoxAttentionWeight(x, bounds) > .1;
 			}
 		}
 		this.headTarget = headAngle;
 		this.idleContext = {
 			pose: visual.pose,
 			enabled: this.behavior.active && !this.behavior.reducedMotion && !visual.moving && visual.pose !== 'badge',
-			attentive: butterflyMode !== 'hidden' && rigReady && visual.pose === 'sitting',
+			attentive: inSight,
 		};
 		if (this.idleContext.enabled) {
 			if (this.idleFrame === undefined) this.paintIdle(now);
 		} else {
+			this.headAngle = 0;
 			if (this.idleFrame !== undefined) cancelAnimationFrame(this.idleFrame);
 			this.idleFrame = undefined;
 			this.idle.update(this.idleTime, this.idleContext);
 			this.idleWallTime = now;
 			for (const art of this.idleArt) art.hide();
 			this.dataset.idleGesture = 'quiet';
-			this.style.setProperty('--fox-head-angle', headAngle.toFixed(2) + 'deg');
 		}
 		const key = visual.pose + ':' + butterflyMode + ':' + this.behavior.mode + ':' + visual.clip;
 		if (key !== this.lastView) {
@@ -292,14 +297,15 @@ class FoxCompanion extends HTMLElement {
 		// Only the active pose draws, capped at 30 fps. Pointer/layout reads stay
 		// in render(), not in this small animation loop.
 		if (now - this.lastIdlePaint >= 1_000 / 30) {
+			const elapsed = Math.min(100, now - this.lastIdlePaint);
 			this.lastIdlePaint = now;
 			const sample = this.idle.update(this.idleTime, this.idleContext);
+			const targetAngle = Math.max(-4, Math.min(4, this.headTarget * sample.gaze + sample.head * .25));
+			this.headAngle += (targetAngle - this.headAngle) * (1 - Math.exp(-elapsed / 180));
 			for (const art of this.idleArt) {
-				if (art.pose === this.idleContext.pose) art.draw(sample, this.artworkWidth);
+				if (art.pose === this.idleContext.pose) art.draw(sample, this.artworkWidth, this.headAngle);
 				else art.hide();
 			}
-			const angle = Math.max(-18, Math.min(22, this.headTarget * sample.gaze + sample.head));
-			this.style.setProperty('--fox-head-angle', angle.toFixed(2) + 'deg');
 			this.dataset.idleGesture = sample.blink > 0 ? 'blinking' : sample.gesture;
 		}
 		this.idleFrame = requestAnimationFrame(this.paintIdle);

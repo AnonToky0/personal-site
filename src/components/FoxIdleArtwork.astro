@@ -3,11 +3,11 @@ import { Image } from 'astro:assets';
 import sitting from '../assets/fox/fox-a-sitting-v1.png';
 import resting from '../assets/fox/fox-a-resting-v1.png';
 import sleeping from '../assets/fox/fox-a-sleeping-v1.png';
-interface Props { pose: 'resting' | 'sitting' | 'sleeping'; part?: 'body' | 'head' | 'whole'; }
-const { pose, part = 'whole' } = Astro.props;
+interface Props { pose: 'resting' | 'sitting' | 'sleeping'; }
+const { pose } = Astro.props;
 const source = { sitting, resting, sleeping }[pose];
 ---
-<span class="idle-art" data-idle-art={pose} data-idle-part={part}>
+<span class="idle-art" data-idle-art={pose}>
 	<Image src={source} width={640} format="webp" quality={85} alt="" loading="eager" draggable="false" />
 	<canvas aria-hidden="true"></canvas>
 </span>

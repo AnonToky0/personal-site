@@ -1,7 +1,7 @@
 import type { IdleSample } from './fox-idle.ts';
 
-// Continuous, local texture deformation keeps the approved brushwork intact.
-// No sprite swaps, duplicated ear edges, or whole-body scaling are involved.
+// Preserve the original illustration. Small continuous deformations taper out
+// above the planted forelegs; no replacement head/chest or frontal gaze.
 const vertex = `
 attribute vec2 position;
 varying vec2 uv;
@@ -12,7 +12,7 @@ precision highp float;
 varying vec2 uv;
 uniform sampler2D artwork;
 uniform vec4 rect;
-uniform float pose, part, blink, breath, nearEar, farEar, tail, head;
+uniform float pose, blink, breath, nearEar, farEar, tail, head, pitch;
 float region(vec2 p, vec2 center, vec2 radius) {
 	return 1. - smoothstep(.35, 1., length((p - center) / radius));
 }
@@ -41,7 +41,7 @@ void main() {
 	if(p.x < 0. || p.x > 1. || p.y < 0. || p.y > 1.) { gl_FragColor = vec4(0.); return; }
 	bool sitting = pose > .5 && pose < 1.5;
 	bool sleeping = pose > 1.5;
-	if(part < 1.5) {
+	{
 		float chest = sleeping ? region(p, vec2(.72,.46), vec2(.26,.26)) :
 			sitting ? region(p, vec2(.37,.47), vec2(.21,.25)) :
 			max(region(p, vec2(.40,.58), vec2(.19,.23)), region(p, vec2(.67,.56), vec2(.23,.18)) * .9);
@@ -56,7 +56,12 @@ void main() {
 			p = mix(p, turn(p, pivot, tail * .075), w);
 		}
 	}
-	if(part != 1. && !sleeping) {
+	if(sitting) {
+		// Bend the connected shoulder/neck surface, keeping the elbow region fixed.
+		float w = 1. - smoothstep(.24, .64, p.y);
+		p = mix(p, turn(p, vec2(.38,.48), -pitch * .0174533), w);
+	}
+	if(!sleeping) {
 		if(!sitting) p = mix(p, turn(p, vec2(.40,.38), -head * .0174533), region(p, vec2(.32,.19), vec2(.28,.28)));
 		p = ear(p, sitting ? vec2(.32,.135) : vec2(.313,.17), sitting ? vec2(.075,.15) : vec2(.07,.18), farEar * .0174533);
 		p = ear(p, sitting ? vec2(.437,.205) : vec2(.413,.28), sitting ? vec2(.105,.21) : vec2(.10,.25), nearEar * .0174533);
@@ -82,7 +87,7 @@ export class FoxIdleArt {
 		this.pose = host.dataset.idleArt!;
 		this.image = host.querySelector('img')!;
 		this.canvas = host.querySelector('canvas')!;
-		this.lost = event => { event.preventDefault(); this.hide(); this.gl = null; this.failed = true; };
+		this.lost = event => { event.preventDefault(); this.hide(); this.gl = null; this.texture = undefined; this.failed = true; };
 		this.restored = () => { this.failed = false; };
 		this.canvas.addEventListener('webglcontextlost', this.lost);
 		this.canvas.addEventListener('webglcontextrestored', this.restored);
@@ -112,20 +117,22 @@ export class FoxIdleArt {
 			const position = gl.getAttribLocation(program, 'position');
 			gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 			this.texture = gl.createTexture()!;
+			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, this.texture);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.image);
-			for (const name of ['rect', 'pose', 'part', 'blink', 'breath', 'nearEar', 'farEar', 'tail', 'head']) {
+			gl.uniform1i(gl.getUniformLocation(program, 'artwork'), 0);
+			for (const name of ['rect', 'pose', 'blink', 'breath', 'nearEar', 'farEar', 'tail', 'head', 'pitch']) {
 				const uniform = gl.getUniformLocation(program, name);
 				if (uniform !== null) this.uniforms.set(name, uniform);
 			}
 			return true;
 		} catch { this.failed = true; this.hide(); this.release(); return false; }
 	}
-	draw(sample: IdleSample, width: number) {
+	draw(sample: IdleSample, width: number, pitch = 0) {
 		if (!this.gl && !this.initialize()) return;
 		const gl = this.gl!;
 		const resolution = Math.max(1, Math.min(640, Math.round(width * Math.min(devicePixelRatio, 2))));
@@ -135,8 +142,7 @@ export class FoxIdleArt {
 		}
 		const height = this.image.naturalHeight / this.image.naturalWidth;
 		gl.uniform4f(this.uniforms.get('rect')!, 0, 1 - height, 1, height);
-		const values = { ...sample, pose: this.pose === 'sitting' ? 1 : this.pose === 'sleeping' ? 2 : 0,
-			part: this.host.dataset.idlePart === 'body' ? 1 : this.host.dataset.idlePart === 'head' ? 2 : 0 };
+		const values = { ...sample, pose: this.pose === 'sitting' ? 1 : this.pose === 'sleeping' ? 2 : 0, pitch };
 		for (const [name, value] of Object.entries(values)) if (typeof value === 'number' && this.uniforms.has(name)) gl.uniform1f(this.uniforms.get(name)!, value);
 		gl.drawArrays(gl.TRIANGLES, 0, 6);
 		this.host.dataset.rendered = 'true';
@@ -148,7 +154,7 @@ export class FoxIdleArt {
 			if (this.buffer) this.gl.deleteBuffer(this.buffer);
 			if (this.program) this.gl.deleteProgram(this.program);
 		}
-		this.gl = null; this.uniforms.clear();
+		this.gl = null; this.texture = undefined; this.uniforms.clear();
 	}
 	dispose() {
 		this.hide(); this.release();

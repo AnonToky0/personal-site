@@ -28,11 +28,14 @@ export class FoxTransition {
 
 	snap(state: State) { this.state = state; this.clip = undefined; }
 
-	update(target: State, now: number, animate = true) {
+	update(target: State, now: number, animate = true, returningHead = false) {
 		if (!animate || target === 'badge' || this.state === 'badge') this.snap(target);
 		if (this.clip && now >= this.clip.start + this.clip.lead + motionDuration(this.clip.id)) {
 			this.state = links[this.clip.id].to;
 			this.clip = undefined;
+		}
+		if (animate && returningHead && this.state === 'sitting' && target !== 'badge' && !this.clip) {
+			return { pose: this.state, frame: null, moving: false, clip: null };
 		}
 		if (!this.clip && this.state !== target && this.state !== 'badge' && target !== 'badge') {
 			const id = nextFoxClip(this.state, target)!;
