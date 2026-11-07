@@ -1,5 +1,63 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { noteUrl } from '../lib/notes';
+const notes = await getCollection('notes');
+const picks = ['computer-net/00-learning-roadmap', 'computer-net/12-dns-resolution-cache', 'computer-net/13-wireshark-practice'];
+const featured = picks.flatMap(id => notes.find(note => note.id === id) ?? []);
 ---
 
-<Layout />
+<Layout description="记录学习过程，也记录那些终于跑通的小东西。计算机网络笔记与个人实践记录。">
+  <main id="main-content" class="home">
+    <section class="intro" aria-labelledby="home-title">
+      <p class="eyebrow">一个慢慢生长的个人小站</p>
+      <h1 id="home-title">It works<br />for me<span>.</span></h1>
+      <p class="intro-copy">记录学习过程，<br />也记录那些终于跑通的小东西。</p>
+      <a class="read-link" href="/notes/">翻开学习笔记 <span aria-hidden="true">↗</span></a>
+      <p class="margin-note">保持好奇。<br />动手试试。<br />留下一点记录。</p>
+    </section>
+    <section class="reading" aria-labelledby="reading-title">
+      <div class="section-top"><div><p class="eyebrow">NOTES / 学习笔记</p><h2 id="reading-title">从这里读起</h2></div><a href="/notes/">全部 {notes.length} 篇笔记 <span aria-hidden="true">↗</span></a></div>
+      <ol>{featured.map((note, index) => <li><a class="note-row" href={noteUrl(note.id)}><span class="number">0{index + 1}</span><div><h3>{note.data.title}</h3><p>{note.data.description}</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>)}</ol>
+    </section>
+    <div class="personal">
+      <section aria-labelledby="now-title"><p class="eyebrow">NOW / 正在做</p><h2 id="now-title">把原理弄懂，把小站搭好。</h2><p>沿着计算机网络的学习路线，从协议原理走到动手排障；也在一点点完善这个网站，让笔记有一个可以随时回看的地方。</p></section>
+      <section aria-labelledby="about-title"><p class="eyebrow">ABOUT / 关于这里</p><h2 id="about-title">给学习留一个位置。</h2><p>这里收集学习时遇到的问题、实践中的尝试，以及暂时想明白的答案。随着理解加深，记录也会继续补充。</p><a href="/about/">更多关于这个小站 <span aria-hidden="true">↗</span></a></section>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .home { max-width: 940px; margin: auto; }
+  .intro { position: relative; padding: 54px 0 80px; }
+  .eyebrow { color: #827563; font-size: 11px; letter-spacing: .13em; margin: 0 0 22px; }
+  h1 { font: normal clamp(64px, 9vw, 116px)/.98 Georgia, serif; letter-spacing: -.065em; margin: 0 0 30px; }
+  h1 span { color: #99551f; }
+  .intro-copy { font-size: 18px; line-height: 1.9; color: #6f665a; }
+  a { color: #99551f; text-underline-offset: 5px; }
+  .read-link { display: inline-block; margin-top: 16px; font-size: 14px; }
+  .margin-note { position: absolute; right: 42px; top: 130px; border-left: 1px solid #d9cebc; padding-left: 24px; font-size: 13px; line-height: 2.2; color: #8c806f; }
+  .section-top { display: flex; justify-content: space-between; align-items: end; gap: 20px; padding-bottom: 24px; }
+  .section-top .eyebrow { margin-bottom: 12px; }
+  h2 { font-size: 24px; font-weight: 500; margin: 0; }
+  .section-top > a, .personal a { font-size: 13px; }
+  ol { list-style: none; padding: 0; margin: 0; }
+  li { border-top: 1px solid #e3ddd1; }
+  li:last-child { border-bottom: 1px solid #e3ddd1; }
+  .note-row { display: grid; grid-template-columns: 40px 1fr 24px; gap: 18px; padding: 26px 0; text-decoration: none; color: inherit; }
+  .number, .arrow { font: 16px Georgia, serif; color: #9d8b72; padding-top: 4px; }
+  h3 { font-size: 17px; font-weight: 500; margin: 0 0 10px; }
+  .note-row p, .personal p:not(.eyebrow) { font-size: 14px; line-height: 1.9; color: #7b7266; margin: 0; }
+  .note-row:hover h3 { color: #99551f; }
+  .personal { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; margin-top: 68px; }
+  .personal h2 { font-size: 20px; margin-bottom: 18px; }
+  .personal a { display: inline-block; margin-top: 20px; }
+  a:focus-visible { outline: 2px solid #99551f; outline-offset: 6px; }
+  @media (max-width: 600px) {
+    .intro { padding: 24px 0 52px; }
+    .margin-note { display: none; }
+    .section-top { align-items: start; flex-direction: column; }
+    .note-row { grid-template-columns: 24px 1fr 16px; gap: 10px; }
+    .personal { grid-template-columns: 1fr; gap: 36px; margin-top: 44px; }
+  }
+</style>

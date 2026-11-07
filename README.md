@@ -19,7 +19,8 @@ Manage the background server with `npm run astro -- dev status`, `npm run astro 
 
 ## Content
 
-- `src/pages/`: site pages; the home page currently contains only the shared layout.
+- `src/pages/`: public pages, including the homepage with selected notes and a short introduction.
+- `src/dev/fox-preview.astro`: development-only Fox test page at `/fox-preview`; injected by `astro.config.mjs` during `astro dev` and excluded from production builds.
 - `src/content/notes/`: Markdown notes.
 - `src/layouts/Layout.astro`: shared layout and default site title.
 - `src/assets/fox/bluebottle-v1.png`: source artwork for the butterfly favicons in `public/`.
