@@ -1,5 +1,6 @@
 ---
 import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 import FoxPet from '../components/FoxPet.astro';
 
 interface Props {
@@ -12,7 +13,7 @@ const { title = 'It works for me.', description, notes = false } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={notes ? 'zh-CN' : 'en'}>
+<html lang="zh-CN">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width" />
@@ -26,7 +27,8 @@ const { title = 'It works for me.', description, notes = false } = Astro.props;
 		{notes && <a class="skip-link" href="#main-content">跳到正文</a>}
 		<Header notes={notes} />
 		
-		<slot />
+		<div class="page-content"><slot /></div>
+		<Footer />
 		<FoxPet />
 	</body>
 </html>
@@ -34,5 +36,6 @@ const { title = 'It works for me.', description, notes = false } = Astro.props;
 <style>
 	:global(*) { box-sizing: border-box; }
 	html { min-height: 100%; background: #f7f5f0; color: #342f29; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
-	body { margin: 0 auto; width: min(1100px, calc(100% - 40px)); min-height: 100dvh; padding-bottom: 220px; }
+	body { margin: 0 auto; width: min(1100px, calc(100% - 40px)); min-height: 100dvh; display: flex; flex-direction: column; }
+	.page-content { flex: 1; min-width: 0; }
 </style>

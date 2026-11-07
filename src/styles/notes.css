@@ -1,4 +1,4 @@
-body.notes-site { width:100%; --paper:#f7f5f0; --ink:#342f29; --muted:#7b7266; --line:#e3ddd1; --accent:#99551f; --selected:#efe4d2; padding-bottom:100px; }
+body.notes-site { width:100%; --paper:#f7f5f0; --ink:#342f29; --muted:#7b7266; --line:#e3ddd1; --accent:#99551f; --selected:#efe4d2; }
 .notes-site a { text-underline-offset:4px; }
 .notes-site :focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 .skip-link { position:fixed; left:20px; top:-80px; z-index:100; background:var(--paper); color:var(--accent); padding:12px; }
