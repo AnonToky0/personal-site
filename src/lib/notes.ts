@@ -1,8 +1,8 @@
 import type { CollectionEntry } from 'astro:content';
 export type Note = CollectionEntry<'notes'>;
 const topics: Record<string, { title: string; description: string }> = {
-  'computer-net': { title: '计算机网络', description: '从一次数据传输出发，理解网络如何工作，也学着把问题一步步查清。' },
-  general: { title: '写作与工具', description: '记录写作方法、常用工具，以及维护这个小站的实践。' },
+  'computer-net': { title: '计算机网络', description: '从数据传输过程理解网络机制，通过实验与分层排查定位故障。' },
+  general: { title: '写作与工具', description: '整理写作方法、工具使用与本站维护过程中的实践记录。' },
 };
 export function noteUrl(id: string) { return `/notes/${id.split('/').map(encodeURIComponent).join('/')}/`; }
 export function topicId(note: Note) { return note.id.includes('/') ? note.id.split('/')[0] : 'general'; }

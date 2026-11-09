@@ -7,22 +7,22 @@ const picks = ['computer-net/00-learning-roadmap', 'computer-net/12-dns-resoluti
 const featured = picks.flatMap(id => notes.find(note => note.id === id) ?? []);
 ---
 
-<Layout description="记录学习过程，也记录那些终于跑通的小东西。计算机网络笔记与个人实践记录。">
+<Layout description="学习笔记、项目实践与问题复盘。记录计算机网络的原理、实验与排障过程，以及尚未推翻的结论。">
   <main id="main-content" class="home">
     <section class="intro" aria-labelledby="home-title">
-      <p class="eyebrow">一个慢慢生长的个人小站</p>
+      <p class="eyebrow">思考、实践，以及尚未推翻的结论。</p>
       <h1 id="home-title">It works<br />for me<span>.</span></h1>
-      <p class="intro-copy">记录学习过程，<br />也记录那些终于跑通的小东西。</p>
-      <a class="read-link" href="/notes/">翻开学习笔记 <span aria-hidden="true">↗</span></a>
-      <p class="margin-note">保持好奇。<br />动手试试。<br />留下一点记录。</p>
+      <p class="intro-copy">这里收录学习笔记、项目实践与问题复盘。<br />有些方法经过验证，有些只是暂时没有出事。</p>
+      <a class="read-link" href="/notes/">阅读笔记 <span aria-hidden="true">↗</span></a>
+      <p class="margin-note">提出问题。<br />动手验证。<br />保留证据。</p>
     </section>
     <section class="reading" aria-labelledby="reading-title">
-      <div class="section-top"><div><p class="eyebrow">NOTES / 学习笔记</p><h2 id="reading-title">从这里读起</h2></div><a href="/notes/">全部 {notes.length} 篇笔记 <span aria-hidden="true">↗</span></a></div>
+      <div class="section-top"><div><p class="eyebrow">NOTES / 学习笔记</p><h2 id="reading-title">选读笔记</h2></div><a href="/notes/">全部 {notes.length} 篇笔记 <span aria-hidden="true">↗</span></a></div>
       <ol>{featured.map((note, index) => <li><a class="note-row" href={noteUrl(note.id)}><span class="number">0{index + 1}</span><div><h3>{note.data.title}</h3><p>{note.data.description}</p></div><span class="arrow" aria-hidden="true">↗</span></a></li>)}</ol>
     </section>
     <div class="personal">
-      <section aria-labelledby="now-title"><p class="eyebrow">NOW / 正在做</p><h2 id="now-title">把原理弄懂，把小站搭好。</h2><p>沿着计算机网络的学习路线，从协议原理走到动手排障；也在一点点完善这个网站，让笔记有一个可以随时回看的地方。</p></section>
-      <section aria-labelledby="about-title"><p class="eyebrow">ABOUT / 关于这里</p><h2 id="about-title">给学习留一个位置。</h2><p>这里收集学习时遇到的问题、实践中的尝试，以及暂时想明白的答案。随着理解加深，记录也会继续补充。</p><a href="/about/">更多关于这个小站 <span aria-hidden="true">↗</span></a></section>
+      <section aria-labelledby="now-title"><p class="eyebrow">NOW / 正在做</p><h2 id="now-title">理解协议，验证实现。</h2><p>当前主要学习计算机网络，通过实验与排障验证对协议的理解，同时维护这个网站，整理可供复查的过程与结果。</p></section>
+      <section aria-labelledby="about-title"><p class="eyebrow">ABOUT / 关于这里</p><h2 id="about-title">为结论保留依据。</h2><p>记录问题、尝试与判断依据。结论允许修订，错误也尽量留下原因。</p><a href="/about/">关于本站 <span aria-hidden="true">↗</span></a></section>
     </div>
   </main>
 </Layout>

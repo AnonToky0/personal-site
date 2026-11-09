@@ -4,7 +4,7 @@ const { notes = false } = Astro.props;
 ---
 <header class:list={{ 'notes-header': notes }}>
 <div class:list={{ 'notes-header-inner': notes }} data-fox-boundary>
-{notes && <a class="notes-brand" href="/notes/">Notes<span>学习 · 记录 · 回看</span></a>}
+{notes && <a class="notes-brand" href="/notes/">Notes<span>问题 · 实践 · 复核</span></a>}
 <nav aria-label="全站导航">
     <a href="/">Home</a>
     <a href="/notes" aria-current={notes ? 'page' : undefined}>Notes</a>
